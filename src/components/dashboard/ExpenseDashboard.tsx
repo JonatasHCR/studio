@@ -5,14 +5,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { type Expense, type ExpenseStatus } from '@/lib/types';
 import { StatusCard } from '@/components/dashboard/StatusCard';
 import { ExpenseCard } from '@/components/dashboard/ExpenseCard';
-import { Trophy, Hourglass, AlertTriangle, CheckCircle2, DollarSign, Ban, Loader } from 'lucide-react';
+import { Hourglass, AlertTriangle, CheckCircle2, DollarSign, Ban, Loader, FileText } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 
 const statusConfig: Record<ExpenseStatus, { title: string; icon: ReactNode }> = {
-  due: { title: 'A Vencer', icon: <Trophy className="h-8 w-8" /> },
+  due: { title: 'A Vencer', icon: <FileText className="h-8 w-8" /> },
   'due-soon': { title: 'Vencendo', icon: <Hourglass className="h-8 w-8" /> },
   overdue: { title: 'Vencidas', icon: <AlertTriangle className="h-8 w-8" /> },
   paid: { title: 'Pagas', icon: <CheckCircle2 className="h-8 w-8" /> },
