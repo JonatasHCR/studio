@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { type Expense, type ExpenseStatus } from '@/lib/types';
-import { CalendarDays, DollarSign, MoreVertical, Pencil, Check, User } from 'lucide-react';
+import { CalendarDays, DollarSign, MoreVertical, Pencil, Check, User, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -66,10 +66,15 @@ export function ExpenseCard({ expense }: { expense: Expense }) {
                     </span>
                 </div>
             </div>
-            {expense.status !== 'paid' && (
+            {expense.status !== 'paid' ? (
                 <Button>
                     <Check className="mr-2 h-4 w-4" />
                     Pagar
+                </Button>
+            ) : (
+                <Button variant="outline">
+                    <X className="mr-2 h-4 w-4" />
+                    Não Paga
                 </Button>
             )}
         </div>
