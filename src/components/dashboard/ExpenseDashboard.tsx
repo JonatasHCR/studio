@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useMemo, type ReactNode } from 'react';
+import { useState, useMemo, type ReactNode, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { type Expense, type ExpenseStatus } from '@/lib/types';
 import { StatusCard } from '@/components/dashboard/StatusCard';
 import { ExpenseCard } from '@/components/dashboard/ExpenseCard';
-import { Trophy, Hourglass, AlertTriangle, CheckCircle2, DollarSign, Ban } from 'lucide-react';
+import { Trophy, Hourglass, AlertTriangle, CheckCircle2, DollarSign, Ban, Loader } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const statusConfig: Record<ExpenseStatus, { title: string; icon: ReactNode }> = {
   due: { title: 'A Vencer', icon: <Trophy className="h-8 w-8" /> },
@@ -16,25 +17,83 @@ const statusConfig: Record<ExpenseStatus, { title: string; icon: ReactNode }> = 
 
 const statusOrder: ExpenseStatus[] = ['overdue', 'due-soon', 'due', 'paid'];
 
-export function ExpenseDashboard({ initialExpenses }: { initialExpenses: Expense[] }) {
+function DashboardSkeleton() {
+    return (
+        <div className="flex flex-col gap-8">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {statusOrder.map((status) => (
+                    <CardSkeleton key={status} />
+                ))}
+            </div>
+            <div className="rounded-xl border bg-card text-card-foreground shadow-sm">
+                <div className="flex flex-col space-y-1.5 p-6">
+                    <Skeleton className="h-8 w-48" />
+                    <Skeleton className="h-6 w-32" />
+                </div>
+                <div className="p-6 pt-0">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                        {[...Array(3)].map((_, i) => (
+                           <CardSkeleton key={i} />
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function CardSkeleton() {
+    return (
+      <div className="flex flex-col space-y-3">
+        <Skeleton className="h-[125px] w-full rounded-xl" />
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-[250px]" />
+          <Skeleton className="h-4 w-[200px]" />
+        </div>
+      </div>
+    )
+  }
+
+export function ExpenseDashboard() {
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState<ExpenseStatus>('overdue');
+
+  useEffect(() => {
+    async function fetchExpenses() {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/expenses');
+        const data = await response.json();
+        setExpenses(data);
+      } catch (error) {
+        console.error("Failed to fetch expenses:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchExpenses();
+  }, []);
 
   const statusCounts = useMemo(() => {
     const counts: Record<ExpenseStatus, number> = { due: 0, 'due-soon': 0, overdue: 0, paid: 0 };
-    initialExpenses.forEach((expense) => {
+    expenses.forEach((expense) => {
       counts[expense.status] = (counts[expense.status] || 0) + 1;
     });
     return counts;
-  }, [initialExpenses]);
+  }, [expenses]);
 
   const filteredExpenses = useMemo(() => {
-    return initialExpenses.filter((e) => e.status === selectedStatus);
-  }, [initialExpenses, selectedStatus]);
+    return expenses.filter((e) => e.status === selectedStatus);
+  }, [expenses, selectedStatus]);
 
   const totalAmount = useMemo(() => {
     return filteredExpenses.reduce((sum, expense) => sum + expense.amount, 0);
   }, [filteredExpenses]);
 
+  if (loading) {
+    return <DashboardSkeleton />;
+  }
 
   return (
     <div className="flex flex-col gap-8">

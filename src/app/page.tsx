@@ -1,4 +1,3 @@
-import { expenses } from '@/lib/data';
 import { ExpenseDashboard } from '@/components/dashboard/ExpenseDashboard';
 import { FileSpreadsheet } from 'lucide-react';
 
@@ -21,7 +20,7 @@ export default function Home() {
                 </div>
             </div>
         </header>
-        <ExpenseDashboard initialExpenses={expenses} />
+        <ExpenseDashboard />
       </div>
     </main>
   );
