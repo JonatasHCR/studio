@@ -1,12 +1,15 @@
 'use client';
 
-import { useState, useMemo, type ReactNode, useEffect } from 'react';
+import { useState, useMemo, type ReactNode, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { type Expense, type ExpenseStatus } from '@/lib/types';
 import { StatusCard } from '@/components/dashboard/StatusCard';
 import { ExpenseCard } from '@/components/dashboard/ExpenseCard';
 import { Trophy, Hourglass, AlertTriangle, CheckCircle2, DollarSign, Ban, Loader } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card } from '@/components/ui/card';
 
 const statusConfig: Record<ExpenseStatus, { title: string; icon: ReactNode }> = {
   due: { title: 'A Vencer', icon: <Trophy className="h-8 w-8" /> },
@@ -58,22 +61,24 @@ export function ExpenseDashboard() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState<ExpenseStatus>('overdue');
+  const [dueSoonDays, setDueSoonDays] = useState(5);
+
+  const fetchExpenses = useCallback(async (days: number) => {
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/expenses?dueSoonDays=${days}`);
+      const data = await response.json();
+      setExpenses(data);
+    } catch (error) {
+      console.error("Failed to fetch expenses:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    async function fetchExpenses() {
-      try {
-        setLoading(true);
-        const response = await fetch('/api/expenses');
-        const data = await response.json();
-        setExpenses(data);
-      } catch (error) {
-        console.error("Failed to fetch expenses:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchExpenses();
-  }, []);
+    fetchExpenses(dueSoonDays);
+  }, [fetchExpenses, dueSoonDays]);
 
   const statusCounts = useMemo(() => {
     const counts: Record<ExpenseStatus, number> = { due: 0, 'due-soon': 0, overdue: 0, paid: 0 };
@@ -91,12 +96,23 @@ export function ExpenseDashboard() {
     return filteredExpenses.reduce((sum, expense) => sum + expense.amount, 0);
   }, [filteredExpenses]);
 
-  if (loading) {
+  if (loading && expenses.length === 0) {
     return <DashboardSkeleton />;
   }
 
   return (
     <div className="flex flex-col gap-8">
+        <Card className="p-4 flex items-center justify-center sm:justify-start gap-4">
+            <Label htmlFor="due-soon-days" className="font-semibold text-center sm:text-left">Dias para "Vencendo":</Label>
+            <Input
+                id="due-soon-days"
+                type="number"
+                value={dueSoonDays}
+                onChange={(e) => setDueSoonDays(Math.max(0, parseInt(e.target.value, 10)))}
+                className="w-24"
+                min="0"
+            />
+        </Card>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {statusOrder.map((status) => (
           <StatusCard
@@ -111,7 +127,12 @@ export function ExpenseDashboard() {
         ))}
       </div>
 
-      <div className="rounded-xl border bg-card text-card-foreground shadow-sm">
+      <div className="rounded-xl border bg-card text-card-foreground shadow-sm relative">
+        {loading && (
+          <div className="absolute inset-0 bg-background/50 flex items-center justify-center z-10">
+            <Loader className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        )}
         <div className="flex flex-col space-y-1.5 p-6">
             <div className="flex flex-wrap items-center justify-between gap-2">
                 <h3 className="font-headline text-2xl font-semibold leading-none tracking-tight">

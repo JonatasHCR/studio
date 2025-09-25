@@ -1,9 +1,9 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
 import { expenses as rawExpenses } from '@/lib/data';
 import { type Expense, type ExpenseStatus } from '@/lib/types';
 import { isBefore, isAfter, differenceInDays, startOfDay, parseISO } from 'date-fns';
 
-function getDynamicStatus(expense: Expense): ExpenseStatus {
+function getDynamicStatus(expense: Expense, dueSoonDays: number): ExpenseStatus {
     if (expense.status === 'paid') {
       return 'paid';
     }
@@ -17,17 +17,21 @@ function getDynamicStatus(expense: Expense): ExpenseStatus {
   
     const daysUntilDue = differenceInDays(dueDate, today);
   
-    if (daysUntilDue <= 5) {
+    if (daysUntilDue <= dueSoonDays) {
       return 'due-soon';
     }
   
     return 'due';
   }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const searchParams = request.nextUrl.searchParams;
+  const dueSoonDaysParam = searchParams.get('dueSoonDays');
+  const dueSoonDays = dueSoonDaysParam ? parseInt(dueSoonDaysParam, 10) : 5;
+
   const dynamicallyUpdatedExpenses = rawExpenses.map(expense => ({
     ...expense,
-    status: getDynamicStatus(expense),
+    status: getDynamicStatus(expense, dueSoonDays),
   }));
   
   return NextResponse.json(dynamicallyUpdatedExpenses);
