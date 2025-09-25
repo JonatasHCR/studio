@@ -18,7 +18,7 @@ const statusConfig: Record<ExpenseStatus, { title: string; icon: ReactNode }> = 
   paid: { title: 'Pagas', icon: <CheckCircle2 className="h-8 w-8" /> },
 };
 
-const statusOrder: ExpenseStatus[] = ['overdue', 'due-soon', 'due', 'paid'];
+const statusOrder: ExpenseStatus[] = ['due', 'due-soon', 'overdue', 'paid'];
 
 function DashboardSkeleton() {
     return (
@@ -60,7 +60,7 @@ function CardSkeleton() {
 export function ExpenseDashboard() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedStatus, setSelectedStatus] = useState<ExpenseStatus>('overdue');
+  const [selectedStatus, setSelectedStatus] = useState<ExpenseStatus>('due');
   const [dueSoonDays, setDueSoonDays] = useState(5);
 
   const fetchExpenses = useCallback(async (days: number) => {
@@ -102,17 +102,6 @@ export function ExpenseDashboard() {
 
   return (
     <div className="flex flex-col gap-8">
-        <Card className="p-4 flex items-center justify-center sm:justify-start gap-4">
-            <Label htmlFor="due-soon-days" className="font-semibold text-center sm:text-left">Dias para "Vencendo":</Label>
-            <Input
-                id="due-soon-days"
-                type="number"
-                value={dueSoonDays}
-                onChange={(e) => setDueSoonDays(Math.max(0, parseInt(e.target.value, 10)))}
-                className="w-24"
-                min="0"
-            />
-        </Card>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {statusOrder.map((status) => (
           <StatusCard
@@ -123,6 +112,8 @@ export function ExpenseDashboard() {
             status={status}
             isSelected={selectedStatus === status}
             onClick={() => setSelectedStatus(status)}
+            dueSoonDays={dueSoonDays}
+            setDueSoonDays={setDueSoonDays}
           />
         ))}
       </div>
