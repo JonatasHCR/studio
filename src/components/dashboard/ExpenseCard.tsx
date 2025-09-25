@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { type Expense, type ExpenseStatus } from '@/lib/types';
-import { CalendarDays, DollarSign, MoreVertical, Pencil, User, Check } from 'lucide-react';
+import { CalendarDays, DollarSign, MoreVertical, Pencil, Check, User } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -41,15 +41,6 @@ export function ExpenseCard({ expense }: { expense: Expense }) {
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                        {expense.status !== 'paid' && (
-                            <>
-                                <DropdownMenuItem>
-                                    <Check className="mr-2 h-4 w-4" />
-                                    Pagar
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                            </>
-                        )}
                         <DropdownMenuItem>
                             <Pencil className="mr-2 h-4 w-4" />
                             Editar
@@ -60,19 +51,27 @@ export function ExpenseCard({ expense }: { expense: Expense }) {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="flex flex-col gap-2">
-            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                <CalendarDays className="h-4 w-4" />
-                <span>
-                    Vencimento: {format(dueDate, "dd 'de' MMMM, yyyy", { locale: ptBR })}
-                </span>
+        <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
+                <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                    <CalendarDays className="h-4 w-4" />
+                    <span>
+                        Vencimento: {format(dueDate, "dd 'de' MMMM, yyyy", { locale: ptBR })}
+                    </span>
+                </div>
+                <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                    <User className="h-4 w-4" />
+                    <span>
+                        Criado por: {expense.createdBy}
+                    </span>
+                </div>
             </div>
-            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                <User className="h-4 w-4" />
-                <span>
-                    Criado por: {expense.createdBy}
-                </span>
-            </div>
+            {expense.status !== 'paid' && (
+                <Button>
+                    <Check className="mr-2 h-4 w-4" />
+                    Pagar
+                </Button>
+            )}
         </div>
       </CardContent>
     </Card>
