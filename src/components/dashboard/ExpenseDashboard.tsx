@@ -105,8 +105,8 @@ export function ExpenseDashboard() {
   const currentExpenses = filteredExpenses.slice(indexOfFirstItem, indexOfLastItem);
 
   const totalAmount = useMemo(() => {
-    return filteredExpenses.reduce((sum, expense) => sum + expense.amount, 0);
-  }, [filteredExpenses]);
+    return currentExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+  }, [currentExpenses]);
 
   if (loading && expenses.length === 0) {
     return <DashboardSkeleton />;
