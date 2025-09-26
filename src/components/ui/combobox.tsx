@@ -25,72 +25,72 @@ interface ComboboxProps {
     onChange: (value: string) => void;
     placeholder?: string;
     noResultsText?: string;
+    allowNewValues?: boolean;
 }
 
-export function Combobox({ options, value, onChange, placeholder, noResultsText}: ComboboxProps) {
+export function Combobox({ options, value, onChange, placeholder, noResultsText, allowNewValues = false }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
   
-  const filteredOptions = options.filter(option => 
-    option.label.toLowerCase().includes((value || '').toLowerCase())
-  );
-
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-         <div className="relative">
-            <Command>
-              <CommandInput 
-                placeholder={placeholder || "Search..."} 
-                value={value}
-                onValueChange={onChange}
-                onFocus={() => setOpen(true)}
-                className="w-full justify-between"
-              />
-            </Command>
-            <ChevronsUpDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 shrink-0 opacity-50" />
-        </div>
+        <Button
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            className="w-full justify-between"
+          >
+          {value
+            ? options.find((option) => option.value.toLowerCase() === value.toLowerCase())?.label || value
+            : placeholder || "Selecione..."}
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-          <CommandList>
-            {filteredOptions.length === 0 && (value || "").length > 0 && (
-                <CommandItem
-                    value={value}
+          <Command>
+            <CommandInput 
+              placeholder={placeholder || "Pesquisar..."} 
+              onValueChange={onChange}
+              value={value}
+            />
+            <CommandList>
+                <CommandEmpty>
+                {allowNewValues && value ? (
+                    <div
+                        onClick={() => {
+                            onChange(value)
+                            setOpen(false)
+                        }}
+                        className="cursor-pointer p-2"
+                    >
+                        Criar "{value}"
+                    </div>
+                ): (
+                    noResultsText || "Nenhum resultado encontrado."
+                )}
+                </CommandEmpty>
+                <CommandGroup>
+                {options.map((option) => (
+                    <CommandItem
+                    key={option.value}
+                    value={option.value}
                     onSelect={(currentValue) => {
                         onChange(currentValue === value ? "" : currentValue)
                         setOpen(false)
                     }}
-                >
+                    >
                     <Check
                         className={cn(
                         "mr-2 h-4 w-4",
-                        "opacity-0"
+                        value?.toLowerCase() === option.value.toLowerCase() ? "opacity-100" : "opacity-0"
                         )}
                     />
-                    Criar "{value}"
-                </CommandItem>
-            )}
-            <CommandEmpty>{noResultsText || "No results found."}</CommandEmpty>
-            <CommandGroup>
-              {filteredOptions.map((option) => (
-                <CommandItem
-                  key={option.value}
-                  value={option.value}
-                  onSelect={(currentValue) => {
-                    onChange(currentValue === value ? "" : currentValue)
-                    setOpen(false)
-                  }}
-                >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      value?.toLowerCase() === option.value.toLowerCase() ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                  {option.label}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
+                    {option.label}
+                    </CommandItem>
+                ))}
+                </CommandGroup>
+            </CommandList>
+          </Command>
       </PopoverContent>
     </Popover>
   )

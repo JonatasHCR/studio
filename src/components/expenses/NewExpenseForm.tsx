@@ -53,7 +53,7 @@ export function NewExpenseForm() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [expenseTypes, setExpenseTypes] = useState<string[]>([]);
-
+  
   const form = useForm<ExpenseFormValues>({
     resolver: zodResolver(expenseFormSchema),
     defaultValues: {
@@ -206,6 +206,7 @@ export function NewExpenseForm() {
                         onChange={field.onChange}
                         placeholder="Selecione ou crie um tipo"
                         noResultsText="Nenhum tipo encontrado."
+                        allowNewValues={true}
                     />
                   <FormMessage />
                 </FormItem>

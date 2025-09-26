@@ -205,6 +205,7 @@ export function EditExpenseForm({ expense }: { expense: Expense }) {
                         onChange={field.onChange}
                         placeholder="Selecione ou crie um tipo"
                         noResultsText="Nenhum tipo encontrado."
+                        allowNewValues={true}
                     />
                   <FormMessage />
                 </FormItem>
