@@ -14,7 +14,7 @@ import Link from 'next/link';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('adm@example.com');
-  const [password, setPassword] = useState('123123');
+  const [password, setPassword] = useState('123456');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { auth } = useFirebase();
   const { toast } = useToast();
@@ -46,7 +46,7 @@ export default function LoginPage() {
               <LogIn className="h-8 w-8" />
             </div>
             <CardTitle className="font-headline text-2xl">Acessar Painel</CardTitle>
-            <CardDescription>Use seu e-mail e senha para entrar. (adm@example.com / 123123)</CardDescription>
+            <CardDescription>Use seu e-mail e senha para entrar. (adm@example.com / 123456)</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">

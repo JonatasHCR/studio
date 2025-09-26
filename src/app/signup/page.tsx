@@ -13,9 +13,9 @@ import { useFirebase } from '@/firebase';
 import Link from 'next/link';
 
 export default function SignupPage() {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [name, setName] = useState('Administrador');
+  const [email, setEmail] = useState('adm@example.com');
+  const [password, setPassword] = useState('123456');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { auth } = useFirebase();
   const { toast } = useToast();
