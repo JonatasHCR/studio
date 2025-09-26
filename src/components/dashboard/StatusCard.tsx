@@ -58,7 +58,7 @@ export function StatusCard({ title, count, icon, status, isSelected, onClick, du
             <Input
                 id="due-soon-days"
                 type="number"
-                value={dueSoonDays}
+                value={dueSoonDays || 0}
                 onChange={(e) => setDueSoonDays(Math.max(0, parseInt(e.target.value, 10)))}
                 className="h-8 w-16"
                 min="0"
