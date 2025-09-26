@@ -27,6 +27,9 @@ class UserEndpoint:
         self.router.get("/email/{email}", response_model=UserOutputSchema)(
             self.get_by_email
         )
+        self.router.get("/username/{username}", response_model=UserOutputSchema)(
+            self.get_by_username
+        )
 
     async def _get_by_id(
         self, id: int, db: AsyncSession = Depends(get_db)
@@ -87,5 +90,14 @@ class UserEndpoint:
         service = self.service(db)
         try:
             return await service.get_by_email(email)
+        except ValueError as error:
+            raise HTTPException(status_code=404, detail=str(error))
+
+    async def get_by_username(
+        self, username: str, db: AsyncSession = Depends(get_db)
+    ) -> UserOutputSchema:
+        service = self.service(db)
+        try:
+            return await service.get_by_username(username)
         except ValueError as error:
             raise HTTPException(status_code=404, detail=str(error))

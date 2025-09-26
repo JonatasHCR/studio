@@ -22,8 +22,8 @@ import { useState, useEffect } from 'react';
 import { signIn } from '@/lib/api';
 
 const loginFormSchema = z.object({
-  email: z.string().email({
-    message: 'Por favor, insira um endereço de e-mail válido.',
+  nome: z.string().min(1, {
+    message: 'O nome de usuário é obrigatório.',
   }),
   senha: z.string().min(1, {
     message: 'A senha é obrigatória.',
@@ -50,7 +50,7 @@ export default function LoginPage() {
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginFormSchema),
     defaultValues: {
-      email: '',
+      nome: '',
       senha: '',
     },
   });
@@ -68,7 +68,7 @@ export default function LoginPage() {
         });
         router.push('/');
       } else {
-        throw new Error('E-mail ou senha inválidos.');
+        throw new Error('Usuário ou senha inválidos.');
       }
     } catch (error) {
       toast({
@@ -102,14 +102,13 @@ export default function LoginPage() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField
                 control={form.control}
-                name="email"
+                name="nome"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>E-mail</FormLabel>
+                    <FormLabel>Nome de Usuário</FormLabel>
                     <FormControl>
                       <Input
-                        type="email"
-                        placeholder="seu@email.com"
+                        placeholder="Seu nome de usuário"
                         {...field}
                       />
                     </FormControl>

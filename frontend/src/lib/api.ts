@@ -1,10 +1,11 @@
 import { type Expense, type User } from './types';
-import { useToast } from '@/hooks/use-toast';
 
 const API_BASE_URL = 'http://127.0.0.1:8000';
 
 async function fetchWrapper<T>(endpoint: string, options?: RequestInit): Promise<T> {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+  const url = `${API_BASE_URL}${endpoint}`;
+  try {
+    const response = await fetch(url, {
       ...options,
       headers: {
         'Content-Type': 'application/json',
@@ -21,17 +22,8 @@ async function fetchWrapper<T>(endpoint: string, options?: RequestInit): Promise
         }
       
         const errorMessage = errorData?.detail || 'Ocorreu um erro na comunicação com a API.';
-        console.error('API Error:', errorMessage, 'Status:', response.status);
+        console.error('API Error:', errorMessage, 'Status:', response.status, 'URL:', url);
         
-        // This is a client-side solution to a server-side problem.
-        // We are displaying the raw error from the Python API to the user.
-        const { toast } = useToast();
-        toast({
-            variant: 'destructive',
-            title: 'Erro na API',
-            description: String(errorMessage),
-        });
-
         throw new Error(String(errorMessage));
     }
 
@@ -40,34 +32,40 @@ async function fetchWrapper<T>(endpoint: string, options?: RequestInit): Promise
     }
 
     return response.json();
+  } catch(error) {
+    console.error('Fetch failed:', error, 'URL:', url);
+    throw error;
   }
+}
 
 
 // --- Auth API ---
 // This is a workaround. A real sign-in would validate a password.
-// Here, we just fetch the user by email.
-export const signIn = async (credentials: Pick<User, 'email' | 'senha'>): Promise<User | null> => {
+// Here, we just fetch the user by username.
+export const signIn = async (credentials: Pick<User, 'nome' | 'senha'>): Promise<User | null> => {
   try {
-    // The backend doesn't have a password check, so we just get the user by email.
-    const user = await fetchWrapper<User>(`/users/email/${credentials.email}`);
+    // The backend doesn't have a password check, so we just get the user by username.
+    const user = await fetchWrapper<User>(`/users/username/${credentials.nome}`);
     return user;
   } catch (error) {
     console.error('Sign in failed:', error);
-    // The error toast is already shown in fetchWrapper
+    // Let the caller handle the error message display.
     return null;
   }
 };
 
 // --- Expenses API ---
 export const getExpenses = async (): Promise<Expense[]> => {
-    return fetchWrapper<Expense[]>('/despesas');
+    return fetchWrapper<Expense[]>('/despesas/');
 };
 
 export const getExpenseById = async (id: string): Promise<Expense | null> => {
   try {
     const expense = await fetchWrapper<Expense>(`/despesas/${id}`);
     if (expense && !expense.userName) {
-        expense.userName = `Usuário ${expense.user_id}`;
+        // This is a fallback if the user name isn't joined in the backend
+        const user = await fetchWrapper<User>(`/users/${expense.user_id}`);
+        expense.userName = user ? user.nome : `Usuário ${expense.user_id}`;
     }
     return expense;
   } catch (error) {
@@ -76,31 +74,38 @@ export const getExpenseById = async (id: string): Promise<Expense | null> => {
   }
 };
 
-export const addExpense = async (data: Omit<Expense, 'id' | 'userName'>): Promise<Expense> => {
-  return fetchWrapper<Expense>('/despesas', {
+export const addExpense = async (data: Omit<Expense, 'id' | 'userName' | 'dynamicStatus'>): Promise<Expense> => {
+  return fetchWrapper<Expense>('/despesas/', {
     method: 'POST',
     body: JSON.stringify({
         ...data,
         user_id: Number(data.user_id),
+        valor: Number(data.valor),
+        vencimento: data.vencimento, // Already in ISO string format
     }),
   });
 };
 
-export const updateExpense = async (id: string, data: Partial<Omit<Expense, 'id' | 'userName'>>): Promise<Expense> => {
+export const updateExpense = async (id: string, data: Partial<Omit<Expense, 'id' | 'userName' | 'dynamicStatus'>>): Promise<Expense> => {
     const payload: { [key: string]: any } = { ...data };
     if (data.user_id) {
         payload.user_id = Number(data.user_id);
     }
+    if (data.valor) {
+        payload.valor = Number(data.valor);
+    }
+     if (data.vencimento) {
+        payload.vencimento = data.vencimento; // Already in ISO string format
+    }
   
     return fetchWrapper<Expense>(`/despesas/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(payload),
-  });
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    });
 };
 
-export const deleteExpense = async (id: string): Promise<{ success: boolean }> => {
+export const deleteExpense = async (id: string): Promise<void> => {
     await fetchWrapper(`/despesas/${id}`, {
         method: 'DELETE',
     });
-    return { success: true };
 };
