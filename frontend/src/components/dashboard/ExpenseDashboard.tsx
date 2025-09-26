@@ -137,7 +137,9 @@ export function ExpenseDashboard() {
   useEffect(() => {
     if (filterField === 'vencimento') {
       setFilterValue(undefined);
-    } else if (filterField !== 'status' && filterField !== 'tipo') {
+    } else if (filterField === 'tipo' || filterField === 'status') {
+      setFilterValue('Todos');
+    } else {
       setFilterValue('');
     }
   }, [filterField]);
@@ -154,9 +156,9 @@ export function ExpenseDashboard() {
 
         switch (filterField) {
             case 'nome':
-                return e.nome.toLowerCase().startsWith((filterValue as string).toLowerCase());
+                return typeof filterValue === 'string' && e.nome.toLowerCase().startsWith(filterValue.toLowerCase());
             case 'userName':
-                return e.userName?.toLowerCase().startsWith((filterValue as string).toLowerCase()) ?? false;
+                return typeof filterValue === 'string' && (e.userName?.toLowerCase().startsWith(filterValue.toLowerCase()) ?? false);
             case 'tipo':
                  return e.tipo === filterValue;
             case 'status':
