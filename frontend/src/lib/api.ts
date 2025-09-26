@@ -93,22 +93,24 @@ export const getExpenseById = async (id: string): Promise<Expense | null> => {
 };
 
 export const addExpense = async (data: Omit<Expense, 'id' | 'userName' | 'dynamicStatus'>): Promise<Expense> => {
+  const formattedValue = String(data.valor).replace(/\./g, '').replace(',', '.');
   return fetchWrapper<Expense>('/despesas/', {
     method: 'POST',
     body: JSON.stringify({
         ...data,
         user_id: Number(data.user_id),
-        valor: Number(data.valor),
+        valor: Number(formattedValue),
         vencimento: data.vencimento.split('T')[0], // Format to YYYY-MM-DD
     }),
   });
 };
 
 export const updateExpense = async (id: string, data: Partial<Omit<Expense, 'id' | 'dynamicStatus'>>): Promise<Expense> => {
+    const formattedValue = String(data.valor).replace(/\./g, '').replace(',', '.');
     const payload = {
         ...data,
         user_id: Number(data.user_id),
-        valor: Number(data.valor),
+        valor: Number(formattedValue),
         vencimento: data.vencimento.split('T')[0], // Format to YYYY-MM-DD
     };
   
