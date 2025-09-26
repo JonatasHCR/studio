@@ -19,7 +19,7 @@ import { ptBR } from 'date-fns/locale';
 import { cn } from '../../lib/utils';
 import { getExpenses } from '../../lib/api';
 
-type FilterField = 'nome' | 'tipo' | 'vencimento' | 'user_id' | 'status';
+type FilterField = 'nome' | 'tipo' | 'vencimento' | 'userName' | 'status';
 
 function DashboardSkeleton() {
     return (
@@ -126,8 +126,10 @@ export function ExpenseDashboard() {
   ];
   
   useEffect(() => {
-    if (filterField !== 'status' && filterField !== 'tipo') {
-        setFilterValue('');
+    if (filterField === 'vencimento') {
+      setFilterValue(undefined);
+    } else if (filterField !== 'status' && filterField !== 'tipo') {
+      setFilterValue('');
     }
   }, [filterField]);
 
@@ -139,20 +141,19 @@ export function ExpenseDashboard() {
     }
     
     return filtered.filter((e) => {
-        if (!filterValue) return true;
+        if (filterValue === undefined || filterValue === '') return true;
 
         switch (filterField) {
             case 'nome':
                 return e.nome.toLowerCase().startsWith((filterValue as string).toLowerCase());
-            case 'user_id':
-                const userIdFilter = String(e.user_id).toLowerCase();
-                return userIdFilter.startsWith((filterValue as string).toLowerCase());
+            case 'userName':
+                return e.userName?.toLowerCase().startsWith((filterValue as string).toLowerCase()) ?? false;
             case 'tipo':
                  return filterValue === 'Todos' || e.tipo === filterValue;
             case 'status':
                 return filterValue === 'Todos' || e.status === filterValue;
             case 'vencimento':
-                return isSameDay(parseISO(e.vencimento), filterValue as Date);
+                return filterValue instanceof Date && isSameDay(parseISO(e.vencimento), filterValue);
             default:
                 return true;
         }
@@ -186,13 +187,13 @@ export function ExpenseDashboard() {
                             )}
                         >
                             <CalendarIcon className="mr-2 h-4 w-4" />
-                            {filterValue ? format(filterValue as Date, 'PPP', { locale: ptBR }) : <span>Escolha uma data</span>}
+                            {filterValue instanceof Date ? format(filterValue, 'PPP', { locale: ptBR }) : <span>Escolha uma data</span>}
                         </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
                         <Calendar
                             mode="single"
-                            selected={filterValue as Date}
+                            selected={filterValue instanceof Date ? filterValue : undefined}
                             onSelect={(date) => setFilterValue(date)}
                             initialFocus
                         />
@@ -226,7 +227,7 @@ export function ExpenseDashboard() {
                 </Select>
             );
         case 'nome':
-        case 'user_id':
+        case 'userName':
         default:
             return (
                 <div className="relative w-full sm:w-64">
@@ -310,9 +311,9 @@ export function ExpenseDashboard() {
                             <SelectContent>
                                 <SelectItem value="nome">Nome da Despesa</SelectItem>
                                 <SelectItem value="tipo">Tipo</SelectItem>
-                                <SelectItem value="status">Status (Base)</SelectItem>
+                                <SelectItem value="status">Status</SelectItem>
                                 <SelectItem value="vencimento">Data de Vencimento</SelectItem>
-                                <SelectItem value="user_id">Criado Por (ID)</SelectItem>
+                                <SelectItem value="userName">Criado por</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
