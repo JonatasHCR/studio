@@ -13,24 +13,20 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Loader } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { CalendarIcon } from 'lucide-react';
 import { Calendar } from '../ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { Combobox } from '../ui/combobox';
+import { type Expense } from '@/lib/types';
+
 
 const expenseFormSchema = z.object({
   name: z.string().min(2, {
@@ -42,8 +38,8 @@ const expenseFormSchema = z.object({
   dueDate: z.date({
     required_error: 'A data de vencimento é obrigatória.',
   }),
-  type: z.enum(['Boleto', 'Nota'], {
-    required_error: 'Selecione um tipo de despesa.',
+  type: z.string().min(1, {
+    message: 'Selecione um tipo de despesa.',
   }),
   createdBy: z.string().min(2, {
     message: 'O nome do criador deve ter pelo menos 2 caracteres.',
@@ -56,13 +52,32 @@ export function NewExpenseForm() {
   const router = useRouter();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [expenseTypes, setExpenseTypes] = useState<string[]>([]);
+
+  useEffect(() => {
+    async function fetchExpenseTypes() {
+        try {
+            const response = await fetch('/api/expenses');
+            const expenses: Expense[] = await response.json();
+            const types = new Set(expenses.map(e => e.type));
+            setExpenseTypes(Array.from(types));
+        } catch (error) {
+            console.error("Failed to fetch expense types:", error);
+        }
+    }
+    fetchExpenseTypes();
+  }, []);
+
+  const comboboxOptions = useMemo(() => {
+    return expenseTypes.map(type => ({ value: type, label: type }));
+  }, [expenseTypes]);
 
   const form = useForm<ExpenseFormValues>({
     resolver: zodResolver(expenseFormSchema),
     defaultValues: {
       name: '',
       createdBy: 'Usuário Exemplo', // Default creator
-      type: undefined,
+      type: '',
     },
   });
 
@@ -179,22 +194,15 @@ export function NewExpenseForm() {
               control={form.control}
               name="type"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="flex flex-col">
                   <FormLabel>Tipo de Despesa</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o tipo" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Boleto">Boleto</SelectItem>
-                      <SelectItem value="Nota">Nota</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    <Combobox
+                        options={comboboxOptions}
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="Selecione ou crie um tipo"
+                        noResultsText="Nenhum tipo encontrado."
+                    />
                   <FormMessage />
                 </FormItem>
               )}

@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { type Expense, type ExpenseStatus } from '@/lib/types';
 import { StatusCard } from '@/components/dashboard/StatusCard';
 import { ExpenseCard } from '@/components/dashboard/ExpenseCard';
-import { Hourglass, AlertTriangle, CheckCircle2, DollarSign, Ban, Loader, FileText, ChevronLeft, ChevronRight, Search, Filter } from 'lucide-react';
+import { Hourglass, AlertTriangle, CheckCircle2, Ban, Loader, FileText, ChevronLeft, ChevronRight, Search, Filter } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,7 +21,6 @@ const statusConfig: Record<ExpenseStatus, { title: string; icon: ReactNode }> = 
 };
 
 const statusOrder: ExpenseStatus[] = ['due', 'due-soon', 'overdue', 'paid'];
-const expenseTypes = ['Todos', 'Boleto', 'Nota'];
 
 function DashboardSkeleton() {
     return (
@@ -86,6 +85,11 @@ export function ExpenseDashboard() {
   useEffect(() => {
     fetchExpenses(dueSoonDays);
   }, [fetchExpenses, dueSoonDays]);
+
+  const expenseTypes = useMemo(() => {
+    const types = new Set(expenses.map(e => e.type));
+    return ['Todos', ...Array.from(types)];
+  }, [expenses]);
 
   const statusCounts = useMemo(() => {
     const counts: Record<ExpenseStatus, number> = { due: 0, 'due-soon': 0, overdue: 0, paid: 0 };
