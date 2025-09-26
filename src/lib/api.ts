@@ -41,7 +41,6 @@ export const getExpenses = async (): Promise<Expense[]> => {
 export const getExpenseById = async (id: string): Promise<Expense | null> => {
   try {
     const expense = await fetchWrapper<Expense>(`/despesas/${id}`);
-    // Ideally, the API would return the user's name. We'll try to fetch it if not provided.
     if (expense && !expense.userName) {
         // This is a placeholder. In a real app, you might fetch user details separately.
         expense.userName = `Usuário ${expense.user_id}`;

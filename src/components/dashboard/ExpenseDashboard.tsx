@@ -2,10 +2,9 @@
 
 import { useState, useMemo, type ReactNode, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { type Expense, type ExpenseStatus } from '@/lib/types';
-import { StatusCard } from '@/components/dashboard/StatusCard';
+import { type Expense } from '@/lib/types';
 import { ExpenseCard } from '@/components/dashboard/ExpenseCard';
-import { Hourglass, AlertTriangle, CheckCircle2, Ban, Loader, FileText, ChevronLeft, ChevronRight, Search, Filter, CalendarIcon } from 'lucide-react';
+import { Ban, Loader, ChevronLeft, ChevronRight, Search, Filter, CalendarIcon } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,19 +13,11 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { format, isSameDay, parseISO, startOfDay, isBefore, differenceInDays } from 'date-fns';
+import { format, isSameDay, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { getExpenses } from '@/lib/api';
 
-const statusConfig: Record<ExpenseStatus, { title: string; icon: ReactNode }> = {
-  due: { title: 'A Vencer', icon: <FileText className="h-8 w-8" /> },
-  'due-soon': { title: 'Vencendo', icon: <Hourglass className="h-8 w-8" /> },
-  overdue: { title: 'Vencidas', icon: <AlertTriangle className="h-8 w-8" /> },
-  paid: { title: 'Pagas', icon: <CheckCircle2 className="h-8 w-8" /> },
-};
-
-const statusOrder: ExpenseStatus[] = ['due', 'due-soon', 'overdue', 'paid'];
 
 type FilterField = 'nome' | 'tipo' | 'vencimento' | 'user_id';
 
@@ -76,7 +67,7 @@ export function ExpenseDashboard() {
         const data = await getExpenses();
         setRawExpenses(data);
     } catch (error) {
-        console.error(error);
+        console.error("Failed to fetch expenses:", error);
         setRawExpenses([]);
     } finally {
         setIsLoading(false);
@@ -260,7 +251,7 @@ export function ExpenseDashboard() {
                         Nenhuma despesa encontrada
                     </p>
                     <p className="max-w-xs text-sm text-muted-foreground">
-                        Não há despesas com os filtros selecionados.
+                        Não há despesas com os filtros selecionados ou ocorreu um erro ao buscar os dados.
                     </p>
                 </div>
               )}
