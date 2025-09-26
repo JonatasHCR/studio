@@ -1,59 +1,70 @@
-import { expenses, users } from './data';
-import { type Expense, type User, type ExpenseStatus } from './types';
+import { type Expense, type User } from './types';
 
-// Simulate API latency
-const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
+const API_BASE_URL = 'http://127.0.0.1:8000';
+
+async function fetchWrapper<T>(endpoint: string, options?: RequestInit): Promise<T> {
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ message: response.statusText }));
+    throw new Error(errorData.message || 'Ocorreu um erro na comunicação com a API.');
+  }
+  return response.json();
+}
+
 
 // --- Auth API ---
 export const signIn = async (credentials: Pick<User, 'name' | 'password'>): Promise<User | null> => {
-    await delay(1000);
-    const user = users.find(u => u.name === credentials.name && u.password === credentials.password);
-    if (user) {
-        return Promise.resolve(user);
-    }
-    return Promise.resolve(null);
+  try {
+    const user = await fetchWrapper<User>('/signin', {
+      method: 'POST',
+      body: JSON.stringify(credentials),
+    });
+    return user;
+  } catch (error) {
+    console.error('Sign in failed:', error);
+    return null;
+  }
 };
 
 // --- Expenses API ---
 export const getExpenses = async (): Promise<Expense[]> => {
-    await delay(500);
-    return Promise.resolve(JSON.parse(JSON.stringify(expenses)));
+  return fetchWrapper<Expense[]>('/expenses');
 };
 
 export const getExpenseById = async (id: string): Promise<Expense | null> => {
-    await delay(500);
-    const expense = expenses.find(e => e.id === id);
-    return Promise.resolve(expense ? JSON.parse(JSON.stringify(expense)) : null);
+  try {
+    const expense = await fetchWrapper<Expense>(`/expenses/${id}`);
+    return expense;
+  } catch (error) {
+    console.error(`Failed to fetch expense ${id}:`, error);
+    return null;
+  }
 };
 
 export const addExpense = async (data: Omit<Expense, 'id' | 'createdAt' | 'updatedAt'>): Promise<Expense> => {
-    await delay(1000);
-    const newExpense: Expense = {
-        ...data,
-        id: `exp-${Date.now()}`,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-    };
-    expenses.unshift(newExpense);
-    return Promise.resolve(newExpense);
+  return fetchWrapper<Expense>('/expenses', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
 };
 
 export const updateExpense = async (id: string, data: Partial<Omit<Expense, 'id'>>): Promise<Expense> => {
-    await delay(1000);
-    const index = expenses.findIndex(e => e.id === id);
-    if (index === -1) {
-        throw new Error('Expense not found');
-    }
-    expenses[index] = { ...expenses[index], ...data, updatedAt: new Date().toISOString() };
-    return Promise.resolve(expenses[index]);
+  return fetchWrapper<Expense>(`/expenses/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
 };
 
 export const deleteExpense = async (id: string): Promise<{ success: boolean }> => {
-    await delay(1000);
-    const index = expenses.findIndex(e => e.id === id);
-    if (index === -1) {
-        throw new Error('Expense not found');
-    }
-    expenses.splice(index, 1);
-    return Promise.resolve({ success: true });
+    await fetchWrapper(`/expenses/${id}`, {
+        method: 'DELETE',
+    });
+    return { success: true };
 };
