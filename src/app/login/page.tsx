@@ -11,8 +11,8 @@ import { useRouter } from 'next/navigation';
 import { signIn } from '@/lib/api';
 
 export default function LoginPage() {
-  const [name, setName] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('');
+  const [senha, setSenha] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
@@ -21,7 +21,7 @@ export default function LoginPage() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const user = await signIn({ name, password });
+      const user = await signIn({ email, senha });
       if (user) {
         localStorage.setItem('userSession', JSON.stringify(user));
         router.push('/');
@@ -32,7 +32,7 @@ export default function LoginPage() {
       toast({
         variant: 'destructive',
         title: 'Falha no Login',
-        description: 'Usuário ou senha inválidos.',
+        description: 'Email ou senha inválidos.',
       });
       setIsSubmitting(false);
     }
@@ -47,17 +47,17 @@ export default function LoginPage() {
               <LogIn className="h-8 w-8" />
             </div>
             <CardTitle className="font-headline text-2xl">Acessar Painel</CardTitle>
-            <CardDescription>Use seu nome de usuário e senha para entrar.</CardDescription>
+            <CardDescription>Use seu email e senha para entrar.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Nome de Usuário</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
-                id="name"
-                type="text"
-                placeholder="Seu nome de usuário"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                id="email"
+                type="email"
+                placeholder="seu@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={isSubmitting}
               />
@@ -68,8 +68,8 @@ export default function LoginPage() {
                 id="password"
                 type="password"
                 placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={senha}
+                onChange={(e) => setSenha(e.target.value)}
                 required
                 disabled={isSubmitting}
               />

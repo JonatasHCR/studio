@@ -72,7 +72,7 @@ export function NewExpenseForm() {
       const userData: User = JSON.parse(session);
       setUser(userData);
       form.setValue('user_id', userData.id);
-      form.setValue('userName', userData.name);
+      form.setValue('userName', userData.nome);
     }
   }, [form]);
 
@@ -81,8 +81,8 @@ export function NewExpenseForm() {
     setIsSubmitting(true);
     try {
       const expenseData = {
-        nome: data.nome.toUpperCase(),
-        tipo: data.tipo.toUpperCase(),
+        nome: data.nome,
+        tipo: data.tipo,
         valor: parseFloat(data.valor.replace(',', '.')),
         vencimento: data.vencimento.toISOString(),
         user_id: Number(data.user_id)

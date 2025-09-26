@@ -20,7 +20,7 @@ async function fetchWrapper<T>(endpoint: string, options?: RequestInit): Promise
 
 
 // --- Auth API ---
-export const signIn = async (credentials: Pick<User, 'name' | 'password'>): Promise<User | null> => {
+export const signIn = async (credentials: Pick<User, 'email' | 'senha'>): Promise<User | null> => {
   try {
     const user = await fetchWrapper<User>('/signin', {
       method: 'POST',
