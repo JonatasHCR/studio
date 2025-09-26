@@ -85,6 +85,10 @@ export function ExpenseDashboard() {
   useEffect(() => {
     fetchExpenses(dueSoonDays);
   }, [fetchExpenses, dueSoonDays]);
+  
+  const handleStatusChange = () => {
+    fetchExpenses(dueSoonDays);
+  };
 
   const expenseTypes = useMemo(() => {
     const types = new Set(expenses.map(e => e.type));
@@ -206,7 +210,7 @@ export function ExpenseDashboard() {
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: index * 0.05 }}
                     >
-                      <ExpenseCard expense={expense} />
+                      <ExpenseCard expense={expense} onStatusChange={handleStatusChange} />
                     </motion.div>
                   ))}
                 </div>
