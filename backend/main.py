@@ -28,11 +28,8 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-origins = [
-    "http://localhost",
-    "http://localhost:9002",
-    "http://127.0.0.1:9002",
-]
+# Allow all origins for development purposes
+origins = ["*"]
 
 app.add_middleware(
     CORSMiddleware,
