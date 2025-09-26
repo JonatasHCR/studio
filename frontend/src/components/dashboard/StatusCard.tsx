@@ -3,7 +3,7 @@
 import { type ReactNode, type MouseEvent } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { cn } from '../../lib/utils';
-import { type ExpenseStatus } from '../../lib/types';
+import { type DynamicExpenseStatus } from '../../lib/types';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 
@@ -11,14 +11,14 @@ interface StatusCardProps {
   title: string;
   count: number;
   icon: ReactNode;
-  status: ExpenseStatus;
+  status: DynamicExpenseStatus;
   isSelected: boolean;
   onClick: () => void;
   dueSoonDays?: number;
   setDueSoonDays?: (days: number) => void;
 }
 
-const statusStyles: Record<ExpenseStatus, { text: string }> = {
+const statusStyles: Record<DynamicExpenseStatus, { text: string }> = {
     overdue: { text: 'text-status-overdue' },
     'due-soon': { text: 'text-status-due-soon' },
     due: { text: 'text-status-due' },

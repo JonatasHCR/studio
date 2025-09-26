@@ -77,6 +77,10 @@ export default {
           'due-soon': 'hsl(var(--status-due-soon))',
           overdue: 'hsl(var(--status-overdue))',
           paid: 'hsl(var(--status-paid))',
+          'due-foreground': 'hsl(var(--status-due-foreground))',
+          'due-soon-foreground': 'hsl(var(--status-due-soon-foreground))',
+          'overdue-foreground': 'hsl(var(--status-overdue-foreground))',
+          'paid-foreground': 'hsl(var(--status-paid-foreground))',
         }
       },
       borderRadius: {

@@ -1,5 +1,6 @@
-
 export type ExpenseStatus = 'P' | 'Q';
+export type DynamicExpenseStatus = 'overdue' | 'due-soon' | 'due' | 'paid';
+
 
 export interface Expense {
   id: number;
@@ -10,6 +11,7 @@ export interface Expense {
   status: ExpenseStatus;
   user_id: number;
   userName?: string;
+  dynamicStatus?: DynamicExpenseStatus;
 }
 
 export interface User {

@@ -2,9 +2,10 @@
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { type Expense, type ExpenseStatus } from '../../lib/types';
+import { type Expense, type ExpenseStatus, type DynamicExpenseStatus } from '../../lib/types';
 import { ExpenseCard } from './ExpenseCard';
-import { Ban, Loader, ChevronLeft, ChevronRight, Search, Filter, CalendarIcon } from 'lucide-react';
+import { StatusCard } from './StatusCard';
+import { Ban, Loader, ChevronLeft, ChevronRight, Search, Filter, CalendarIcon, Trophy, Hourglass, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
 import { Card } from '../ui/card';
 import { Button } from '../ui/button';
@@ -13,17 +14,22 @@ import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Calendar } from '../ui/calendar';
-import { format, isSameDay, parseISO } from 'date-fns';
+import { format, isSameDay, parseISO, differenceInDays, isPast, isToday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '../../lib/utils';
 import { getExpenses } from '../../lib/api';
-
 
 type FilterField = 'nome' | 'tipo' | 'vencimento' | 'user_id' | 'status';
 
 function DashboardSkeleton() {
     return (
         <div className="flex flex-col gap-8">
+             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <CardSkeleton />
+                <CardSkeleton />
+                <CardSkeleton />
+                <CardSkeleton />
+            </div>
             <div className="rounded-xl border bg-card text-card-foreground shadow-sm">
                 <div className="flex flex-col space-y-1.5 p-6">
                     <Skeleton className="h-8 w-48" />
@@ -52,7 +58,17 @@ function CardSkeleton() {
       </div>
     )
   }
-  
+
+const getDynamicStatus = (expense: Expense, dueSoonDays: number): DynamicExpenseStatus => {
+    if (expense.status === 'Q') return 'paid';
+    
+    const daysUntilDue = differenceInDays(parseISO(expense.vencimento), new Date());
+    
+    if (isPast(parseISO(expense.vencimento)) && !isToday(parseISO(expense.vencimento))) return 'overdue';
+    if (daysUntilDue >= 0 && daysUntilDue <= dueSoonDays) return 'due-soon';
+    return 'due';
+};
+
 export function ExpenseDashboard() {
   const [rawExpenses, setRawExpenses] = useState<Expense[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -60,6 +76,8 @@ export function ExpenseDashboard() {
   const [itemsPerPage, setItemsPerPage] = useState(6);
   const [filterField, setFilterField] = useState<FilterField>('nome');
   const [filterValue, setFilterValue] = useState<string | Date | undefined>('');
+  const [selectedStatus, setSelectedStatus] = useState<DynamicExpenseStatus | 'all'>('all');
+  const [dueSoonDays, setDueSoonDays] = useState(7);
 
   const fetchAndSetExpenses = useCallback(async () => {
     setIsLoading(true);
@@ -78,6 +96,24 @@ export function ExpenseDashboard() {
     fetchAndSetExpenses();
   }, [fetchAndSetExpenses]);
 
+  const expensesWithDynamicStatus = useMemo(() => {
+    return rawExpenses.map(e => ({
+        ...e,
+        dynamicStatus: getDynamicStatus(e, dueSoonDays)
+    }));
+  }, [rawExpenses, dueSoonDays]);
+
+  const statusCounts = useMemo(() => {
+    return expensesWithDynamicStatus.reduce(
+      (acc, e) => {
+        acc[e.dynamicStatus]++;
+        return acc;
+      },
+      { overdue: 0, 'due-soon': 0, due: 0, paid: 0 }
+    );
+  }, [expensesWithDynamicStatus]);
+
+
   const expenseTypes = useMemo(() => {
     const types = new Set(rawExpenses.map(e => e.tipo));
     return ['Todos', ...Array.from(types)];
@@ -90,11 +126,19 @@ export function ExpenseDashboard() {
   ];
   
   useEffect(() => {
-    setFilterValue('');
+    if (filterField !== 'status' && filterField !== 'tipo') {
+        setFilterValue('');
+    }
   }, [filterField]);
 
   const filteredExpenses = useMemo(() => {
-    return rawExpenses.filter((e) => {
+    let filtered = expensesWithDynamicStatus;
+
+    if (selectedStatus !== 'all') {
+        filtered = filtered.filter(e => e.dynamicStatus === selectedStatus);
+    }
+    
+    return filtered.filter((e) => {
         if (!filterValue) return true;
 
         switch (filterField) {
@@ -113,11 +157,11 @@ export function ExpenseDashboard() {
                 return true;
         }
     });
-  }, [rawExpenses, filterField, filterValue]);
+  }, [expensesWithDynamicStatus, filterField, filterValue, selectedStatus]);
   
   useEffect(() => {
     setCurrentPage(1);
-  }, [itemsPerPage, filterField, filterValue]);
+  }, [itemsPerPage, filterField, filterValue, selectedStatus]);
 
   const totalPages = Math.ceil(filteredExpenses.length / itemsPerPage) || 1;
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -203,8 +247,48 @@ export function ExpenseDashboard() {
     return <DashboardSkeleton />;
   }
 
+  const handleStatusCardClick = (status: DynamicExpenseStatus) => {
+    setSelectedStatus(prev => prev === status ? 'all' : status);
+  };
+
   return (
     <div className="flex flex-col gap-8">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <StatusCard 
+                title="Vencidos"
+                icon={<AlertTriangle className="h-5 w-5" />}
+                count={statusCounts.overdue}
+                status="overdue"
+                isSelected={selectedStatus === 'overdue'}
+                onClick={() => handleStatusCardClick('overdue')}
+            />
+            <StatusCard 
+                title="Vencendo"
+                icon={<Hourglass className="h-5 w-5" />}
+                count={statusCounts['due-soon']}
+                status="due-soon"
+                isSelected={selectedStatus === 'due-soon'}
+                onClick={() => handleStatusCardClick('due-soon')}
+                dueSoonDays={dueSoonDays}
+                setDueSoonDays={setDueSoonDays}
+            />
+            <StatusCard 
+                title="A vencer"
+                icon={<Trophy className="h-5 w-5" />}
+                count={statusCounts.due}
+                status="due"
+                isSelected={selectedStatus === 'due'}
+                onClick={() => handleStatusCardClick('due')}
+            />
+            <StatusCard 
+                title="Pagos"
+                icon={<CheckCircle2 className="h-5 w-5" />}
+                count={statusCounts.paid}
+                status="paid"
+                isSelected={selectedStatus === 'paid'}
+                onClick={() => handleStatusCardClick('paid')}
+            />
+        </div>
       <div className="rounded-xl border bg-card text-card-foreground shadow-sm relative">
         {isLoading && rawExpenses.length > 0 && (
           <div className="absolute inset-0 bg-background/50 flex items-center justify-center z-10">
@@ -226,7 +310,7 @@ export function ExpenseDashboard() {
                             <SelectContent>
                                 <SelectItem value="nome">Nome da Despesa</SelectItem>
                                 <SelectItem value="tipo">Tipo</SelectItem>
-                                <SelectItem value="status">Status</SelectItem>
+                                <SelectItem value="status">Status (Base)</SelectItem>
                                 <SelectItem value="vencimento">Data de Vencimento</SelectItem>
                                 <SelectItem value="user_id">Criado Por (ID)</SelectItem>
                             </SelectContent>
@@ -244,7 +328,7 @@ export function ExpenseDashboard() {
         <div className="p-6 pt-0">
           <AnimatePresence mode="wait">
             <motion.div
-              key={currentPage + itemsPerPage + filterField + String(filterValue)}
+              key={currentPage + itemsPerPage + filterField + String(filterValue) + selectedStatus}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
@@ -322,5 +406,3 @@ export function ExpenseDashboard() {
     </div>
   );
 }
-
-    
