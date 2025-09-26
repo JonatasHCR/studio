@@ -17,6 +17,7 @@ import { format, isSameDay, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '../../lib/utils';
 import { getExpenses } from '../../lib/api';
+import { useToast } from '../../hooks/use-toast';
 
 
 type FilterField = 'nome' | 'tipo' | 'vencimento' | 'user_id' | 'status';
@@ -60,6 +61,7 @@ export function ExpenseDashboard() {
   const [itemsPerPage, setItemsPerPage] = useState(6);
   const [filterField, setFilterField] = useState<FilterField>('nome');
   const [filterValue, setFilterValue] = useState<string | Date | undefined>('');
+  const { toast } = useToast();
 
   const fetchAndSetExpenses = useCallback(async () => {
     setIsLoading(true);
@@ -69,10 +71,15 @@ export function ExpenseDashboard() {
     } catch (error) {
         console.error("Failed to fetch expenses:", error);
         setRawExpenses([]);
+        toast({
+            variant: 'destructive',
+            title: 'Erro ao buscar despesas',
+            description: (error as Error).message || 'Não foi possível conectar-se à API.',
+        });
     } finally {
         setIsLoading(false);
     }
-  }, []);
+  }, [toast]);
 
   useEffect(() => {
     fetchAndSetExpenses();
@@ -322,3 +329,5 @@ export function ExpenseDashboard() {
     </div>
   );
 }
+
+    

@@ -13,7 +13,7 @@ async function fetchWrapper<T>(endpoint: string, options?: RequestInit): Promise
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ message: response.statusText }));
-    throw new Error(errorData.detail || errorData.message || 'Ocorreu um erro na comunicação com a API.');
+    throw new Error(errorData.detail || 'Ocorreu um erro na comunicação com a API.');
   }
   
   if (response.status === 204) {
@@ -40,7 +40,6 @@ export const signIn = async (credentials: Pick<User, 'email' | 'senha'>): Promis
 
 // --- Expenses API ---
 export const getExpenses = async (): Promise<Expense[]> => {
-  try {
     const expenses = await fetchWrapper<Expense[]>('/despesas/');
     // Fetch user names for each expense
     const expensesWithUserNames = await Promise.all(
@@ -55,10 +54,6 @@ export const getExpenses = async (): Promise<Expense[]> => {
         })
     );
     return expensesWithUserNames;
-  } catch (error) {
-    console.error("Failed to fetch expenses:", error);
-    return [];
-  }
 };
 
 export const getExpenseById = async (id: string): Promise<Expense | null> => {
@@ -107,9 +102,10 @@ export const updateExpense = async (id: string, data: Partial<Omit<Expense, 'id'
   });
 };
 
-export const deleteExpense = async (id: string): Promise<{ success: boolean }> => {
+export const deleteExpense = async (id: string): Promise<void> => {
     await fetchWrapper(`/despesas/${id}`, {
         method: 'DELETE',
     });
-    return { success: true };
 };
+
+    

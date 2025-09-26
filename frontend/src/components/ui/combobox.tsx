@@ -42,8 +42,7 @@ export function Combobox({
   const [inputValue, setInputValue] = React.useState("")
 
   const handleSelect = (currentValue: string) => {
-    const upperValue = currentValue.toUpperCase();
-    onChange(upperValue === value ? "" : upperValue)
+    onChange(currentValue.toUpperCase() === value ? "" : currentValue.toUpperCase())
     setInputValue("")
     setOpen(false)
   }
@@ -58,7 +57,7 @@ export function Combobox({
   }
 
   const handleInputChange = (searchValue: string) => {
-    setInputValue(searchValue.toUpperCase());
+    setInputValue(searchValue);
   }
 
   const filteredOptions = options.filter(option => 
@@ -125,3 +124,5 @@ export function Combobox({
     </Popover>
   )
 }
+
+    

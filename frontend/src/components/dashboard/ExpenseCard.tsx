@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '../ui/dropdown-menu';
 import { type Expense, type ExpenseStatus } from '../../lib/types';
-import { CalendarDays, MoreVertical, Pencil, User, Loader, Trash2, Tag } from 'lucide-react';
+import { CalendarDays, MoreVertical, Pencil, User, Loader, Trash2 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '../../lib/utils';
@@ -145,3 +145,5 @@ export function ExpenseCard({ expense, onUpdate }: ExpenseCardProps) {
     </Card>
   );
 }
+
+    
