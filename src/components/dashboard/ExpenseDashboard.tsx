@@ -9,7 +9,7 @@ import { Hourglass, AlertTriangle, CheckCircle2, DollarSign, Ban, Loader, FileTe
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 const statusConfig: Record<ExpenseStatus, { title: string; icon: ReactNode }> = {
@@ -99,7 +99,7 @@ export function ExpenseDashboard() {
     setCurrentPage(1);
   }, [selectedStatus, itemsPerPage]);
 
-  const totalPages = Math.ceil(filteredExpenses.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredExpenses.length / itemsPerPage) || 1;
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentExpenses = filteredExpenses.slice(indexOfFirstItem, indexOfLastItem);
@@ -192,17 +192,14 @@ export function ExpenseDashboard() {
           <div className="flex items-center justify-between border-t p-4">
             <div className="flex items-center gap-2">
               <Label htmlFor="items-per-page" className="text-sm text-muted-foreground">Itens por página:</Label>
-              <Select value={String(itemsPerPage)} onValueChange={(value) => setItemsPerPage(Number(value))}>
-                <SelectTrigger id="items-per-page" className="h-8 w-20">
-                  <SelectValue placeholder="Select" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="3">3</SelectItem>
-                  <SelectItem value="6">6</SelectItem>
-                  <SelectItem value="9">9</SelectItem>
-                  <SelectItem value="12">12</SelectItem>
-                </SelectContent>
-              </Select>
+              <Input
+                id="items-per-page"
+                type="number"
+                value={itemsPerPage}
+                onChange={(e) => setItemsPerPage(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                className="h-8 w-20"
+                min="1"
+              />
             </div>
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">
