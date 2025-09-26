@@ -43,7 +43,7 @@ const expenseFormSchema = z.object({
   type: z.string().min(1, {
     message: 'Selecione ou crie um tipo de despesa.',
   }),
-  createdBy: z.string(),
+  createdBy: z.string().min(1, 'O criador é obrigatório'),
 });
 
 type ExpenseFormValues = z.infer<typeof expenseFormSchema>;
@@ -60,7 +60,7 @@ export function NewExpenseForm() {
     resolver: zodResolver(expenseFormSchema),
     defaultValues: {
       name: '',
-      createdBy: user?.displayName || user?.email || '', 
+      createdBy: '', 
       type: '',
       amount: '',
     },
@@ -100,7 +100,6 @@ export function NewExpenseForm() {
         ...data,
         amount: parseFloat(data.amount.replace(',', '.')),
         dueDate: Timestamp.fromDate(data.dueDate),
-        createdBy: user.displayName || user.email,
         status: 'due',
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
@@ -240,7 +239,7 @@ export function NewExpenseForm() {
             <Button type="button" variant="outline" onClick={() => router.back()}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting || !user}>
               {isSubmitting && <Loader className="mr-2 h-4 w-4 animate-spin" />}
               Cadastrar Despesa
             </Button>
