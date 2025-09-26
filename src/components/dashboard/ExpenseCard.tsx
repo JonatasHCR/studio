@@ -31,10 +31,8 @@ interface ExpenseCardProps {
 }
 
 const statusConfig: Record<ExpenseStatus, { label: string; className: string }> = {
-    due: { label: 'A Vencer', className: 'bg-status-due/20 text-status-due-foreground' },
-    'due-soon': { label: 'Vence em Breve', className: 'bg-status-due-soon/20 text-status-due-soon-foreground' },
-    overdue: { label: 'Vencida', className: 'bg-status-overdue/20 text-status-overdue-foreground' },
-    paid: { label: 'Paga', className: 'bg-status-paid/20 text-status-paid-foreground' },
+    P: { label: 'Pendente', className: 'bg-status-due-soon/20 text-status-due-soon-foreground' },
+    Q: { label: 'Quitada', className: 'bg-status-paid/20 text-status-paid-foreground' },
 };
 
 

@@ -24,8 +24,8 @@
                 },
                 "status": {
                     "type": "string",
-                    "enum": ["due", "due-soon", "overdue", "paid"],
-                    "description": "The current status of the expense."
+                    "enum": ["P", "Q"],
+                    "description": "Status da despesa: P - Pendente, Q - Quitada"
                 },
                 "createdBy": {
                     "type": "string",

@@ -42,7 +42,7 @@ const expenseFormSchema = z.object({
   tipo: z.string().min(1, {
     message: 'Selecione ou crie um tipo de despesa.',
   }),
-  status: z.enum(['due', 'due-soon', 'overdue', 'paid'], {
+  status: z.enum(['P', 'Q'], {
     required_error: 'O status é obrigatório.',
   }),
   user_id: z.number().int(),
@@ -85,8 +85,6 @@ export function NewExpenseForm() {
     try {
       const expenseData = {
         ...data,
-        nome: data.nome,
-        tipo: data.tipo,
         valor: parseFloat(data.valor.replace(',', '.')),
         vencimento: data.vencimento.toISOString(),
         user_id: Number(data.user_id)
@@ -116,10 +114,9 @@ export function NewExpenseForm() {
   const comboboxOptions = useMemo(() => expenseTypes.map(type => ({ value: type, label: type })), [expenseTypes]);
   
   const handleTypeChange = (value: string) => {
-    const upperCaseValue = value.toUpperCase();
-    form.setValue('tipo', upperCaseValue);
-    if (value && !expenseTypes.includes(upperCaseValue)) {
-      setExpenseTypes(prev => [...prev, upperCaseValue]);
+    form.setValue('tipo', value);
+    if (value && !expenseTypes.includes(value)) {
+      setExpenseTypes(prev => [...prev, value]);
     }
   };
 
@@ -138,8 +135,7 @@ export function NewExpenseForm() {
                     <Input
                       placeholder="Ex: Conta de Luz"
                       {...field}
-                      className="uppercase"
-                      onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                      onChange={(e) => field.onChange(e.target.value)}
                     />
                   </FormControl>
                   <FormMessage />
@@ -235,10 +231,8 @@ export function NewExpenseForm() {
                             </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                                <SelectItem value="paid">Paga</SelectItem>
-                                <SelectItem value="overdue">Vencida</SelectItem>
-                                <SelectItem value="due-soon">Vence em Breve</SelectItem>
-                                <SelectItem value="due">A Vencer</SelectItem>
+                                <SelectItem value="P">Pendente</SelectItem>
+                                <SelectItem value="Q">Quitada</SelectItem>
                             </SelectContent>
                         </Select>
                         <FormMessage />

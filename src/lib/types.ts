@@ -1,5 +1,5 @@
 
-export type ExpenseStatus = 'due' | 'due-soon' | 'overdue' | 'paid';
+export type ExpenseStatus = 'P' | 'Q';
 
 export interface Expense {
   id: number;

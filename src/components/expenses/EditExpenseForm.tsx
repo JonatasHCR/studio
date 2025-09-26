@@ -17,7 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Loader } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { CalendarIcon } from 'lucide-react';
 import { Calendar } from '../ui/calendar';
@@ -42,7 +42,7 @@ const expenseFormSchema = z.object({
   tipo: z.string().min(1, {
     message: 'Selecione ou crie um tipo de despesa.',
   }),
-  status: z.enum(['due', 'due-soon', 'overdue', 'paid']),
+  status: z.enum(['P', 'Q']),
   user_id: z.number().int(),
   userName: z.string().optional(),
 });
@@ -73,8 +73,6 @@ export function EditExpenseForm({ expense }: { expense: Expense }) {
     try {
       const expenseData = {
         ...data,
-        nome: data.nome.toUpperCase(),
-        tipo: data.tipo.toUpperCase(),
         valor: parseFloat(data.valor.replace(',', '.')),
         vencimento: data.vencimento.toISOString(),
         user_id: Number(data.user_id)
@@ -104,10 +102,9 @@ export function EditExpenseForm({ expense }: { expense: Expense }) {
   const comboboxOptions = useMemo(() => expenseTypes.map(type => ({ value: type, label: type })), [expenseTypes]);
   
   const handleTypeChange = (value: string) => {
-    const upperCaseValue = value.toUpperCase();
-    form.setValue('tipo', upperCaseValue);
-    if (value && !expenseTypes.includes(upperCaseValue)) {
-      setExpenseTypes(prev => [...prev, upperCaseValue]);
+    form.setValue('tipo', value);
+    if (value && !expenseTypes.includes(value)) {
+      setExpenseTypes(prev => [...prev, value]);
     }
   };
 
@@ -126,8 +123,7 @@ export function EditExpenseForm({ expense }: { expense: Expense }) {
                     <Input
                       placeholder="Ex: Conta de Luz"
                       {...field}
-                      className="uppercase"
-                      onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                      onChange={(e) => field.onChange(e.target.value)}
                     />
                   </FormControl>
                   <FormMessage />
@@ -223,10 +219,8 @@ export function EditExpenseForm({ expense }: { expense: Expense }) {
                             </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                                <SelectItem value="paid">Paga</SelectItem>
-                                <SelectItem value="overdue">Vencida</SelectItem>
-                                <SelectItem value="due-soon">Vence em Breve</SelectItem>
-                                <SelectItem value="due">A Vencer</SelectItem>
+                                <SelectItem value="P">Pendente</SelectItem>
+                                <SelectItem value="Q">Quitada</SelectItem>
                             </SelectContent>
                         </Select>
                         <FormMessage />

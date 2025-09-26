@@ -85,10 +85,8 @@ export function ExpenseDashboard() {
 
   const expenseStatuses: { value: ExpenseStatus | 'Todos', label: string }[] = [
     { value: 'Todos', label: 'Todos' },
-    { value: 'paid', label: 'Paga' },
-    { value: 'overdue', label: 'Vencida' },
-    { value: 'due-soon', label: 'Vence em Breve' },
-    { value: 'due', label: 'A Vencer' },
+    { value: 'P', label: 'Pendente' },
+    { value: 'Q', label: 'Quitada' },
   ];
   
   useEffect(() => {
