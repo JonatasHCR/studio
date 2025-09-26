@@ -1,6 +1,6 @@
 import { type Expense, type User } from './types';
 
-const API_BASE_URL = 'http://127.0.0.1:8000';
+const API_BASE_URL = '/api';
 
 async function fetchWrapper<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
@@ -35,7 +35,7 @@ export const signIn = async (credentials: Pick<User, 'name' | 'password'>): Prom
 
 // --- Expenses API ---
 export const getExpenses = async (): Promise<Expense[]> => {
-  return fetchWrapper<Expense[]>('/despesas');
+  return fetchWrapper<Expense[]>('/despesas/');
 };
 
 export const getExpenseById = async (id: string): Promise<Expense | null> => {
@@ -49,7 +49,7 @@ export const getExpenseById = async (id: string): Promise<Expense | null> => {
 };
 
 export const addExpense = async (data: Omit<Expense, 'id' | 'createdAt' | 'updatedAt'>): Promise<Expense> => {
-  return fetchWrapper<Expense>('/despesas', {
+  return fetchWrapper<Expense>('/despesas/', {
     method: 'POST',
     body: JSON.stringify(data),
   });
