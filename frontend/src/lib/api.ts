@@ -1,7 +1,7 @@
 import { type Expense, type User } from './types';
 import { useToast } from '@/hooks/use-toast';
 
-const API_BASE_URL = '/api';
+const API_BASE_URL = 'http://127.0.0.1:8000';
 
 async function fetchWrapper<T>(endpoint: string, options?: RequestInit): Promise<T> {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
@@ -104,5 +104,3 @@ export const deleteExpense = async (id: string): Promise<{ success: boolean }> =
     });
     return { success: true };
 };
-
-    
