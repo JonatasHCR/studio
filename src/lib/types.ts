@@ -2,19 +2,16 @@
 export type ExpenseStatus = 'due' | 'due-soon' | 'overdue' | 'paid';
 
 export interface Expense {
-  id: string;
-  name: string;
-  type: string;
-  amount: number;
-  dueDate: string; // ISO string
-  status: ExpenseStatus;
-  createdBy: string;
-  createdAt: string; // ISO string
-  updatedAt: string; // ISO string
+  id: number;
+  nome: string;
+  tipo: string;
+  valor: number;
+  vencimento: string; // ISO string
+  user_id: number;
 }
 
 export interface User {
-    id: string;
+    id: number;
     name: string;
     email: string;
     password?: string;

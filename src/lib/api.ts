@@ -48,7 +48,7 @@ export const getExpenseById = async (id: string): Promise<Expense | null> => {
   }
 };
 
-export const addExpense = async (data: Omit<Expense, 'id' | 'createdAt' | 'updatedAt'>): Promise<Expense> => {
+export const addExpense = async (data: Omit<Expense, 'id'>): Promise<Expense> => {
   return fetchWrapper<Expense>('/despesas/', {
     method: 'POST',
     body: JSON.stringify(data),

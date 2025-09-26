@@ -30,19 +30,19 @@ import { Combobox } from '@/components/ui/combobox';
 
 
 const expenseFormSchema = z.object({
-  name: z.string().min(2, {
+  nome: z.string().min(2, {
     message: 'O nome deve ter pelo menos 2 caracteres.',
   }),
-  amount: z.string().refine((val) => !isNaN(parseFloat(val.replace(',', '.'))), {
+  valor: z.string().refine((val) => !isNaN(parseFloat(val.replace(',', '.'))), {
     message: 'O valor deve ser um número.',
   }),
-  dueDate: z.date({
+  vencimento: z.date({
     required_error: 'A data de vencimento é obrigatória.',
   }),
-  type: z.string().min(1, {
+  tipo: z.string().min(1, {
     message: 'Selecione ou crie um tipo de despesa.',
   }),
-  createdBy: z.string().min(1, 'O criador é obrigatório.'),
+  user_id: z.number(),
 });
 
 type ExpenseFormValues = z.infer<typeof expenseFormSchema>;
@@ -56,11 +56,11 @@ export function EditExpenseForm({ expense }: { expense: Expense }) {
   const form = useForm<ExpenseFormValues>({
     resolver: zodResolver(expenseFormSchema),
     defaultValues: {
-      name: expense.name,
-      amount: expense.amount.toString().replace('.', ','),
-      dueDate: parseISO(expense.dueDate),
-      type: expense.type,
-      createdBy: expense.createdBy,
+      nome: expense.nome,
+      valor: expense.valor.toString().replace('.', ','),
+      vencimento: parseISO(expense.vencimento),
+      tipo: expense.tipo,
+      user_id: expense.user_id,
     },
   });
   
@@ -68,7 +68,7 @@ export function EditExpenseForm({ expense }: { expense: Expense }) {
     async function fetchExpenseTypes() {
         try {
             const expenses = await getExpenses();
-            const types = new Set(expenses.map(e => e.type as string));
+            const types = new Set(expenses.map(e => e.tipo as string));
             setExpenseTypes(Array.from(types));
         } catch (error) {
             console.error("Failed to fetch expense types:", error);
@@ -80,12 +80,12 @@ export function EditExpenseForm({ expense }: { expense: Expense }) {
   async function onSubmit(data: ExpenseFormValues) {
     setIsSubmitting(true);
     try {
-      await updateExpense(expense.id, {
+      await updateExpense(String(expense.id), {
         ...data,
-        name: data.name,
-        type: data.type,
-        amount: parseFloat(data.amount.replace(',', '.')),
-        dueDate: data.dueDate.toISOString(),
+        nome: data.nome.toUpperCase(),
+        tipo: data.tipo.toUpperCase(),
+        valor: parseFloat(data.valor.replace(',', '.')),
+        vencimento: data.vencimento.toISOString(),
       });
 
       toast({
@@ -111,7 +111,7 @@ export function EditExpenseForm({ expense }: { expense: Expense }) {
   
   const handleTypeChange = (value: string) => {
     const upperCaseValue = value.toUpperCase();
-    form.setValue('type', upperCaseValue);
+    form.setValue('tipo', upperCaseValue);
     if (value && !expenseTypes.includes(upperCaseValue)) {
       setExpenseTypes(prev => [...prev, upperCaseValue]);
     }
@@ -124,7 +124,7 @@ export function EditExpenseForm({ expense }: { expense: Expense }) {
           <CardContent className="space-y-6 pt-6">
             <FormField
               control={form.control}
-              name="name"
+              name="nome"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Nome da Despesa</FormLabel>
@@ -143,7 +143,7 @@ export function EditExpenseForm({ expense }: { expense: Expense }) {
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <FormField
                 control={form.control}
-                name="amount"
+                name="valor"
                 render={({ field }) => (
                     <FormItem>
                     <FormLabel>Valor (R$)</FormLabel>
@@ -156,7 +156,7 @@ export function EditExpenseForm({ expense }: { expense: Expense }) {
                 />
                  <FormField
                   control={form.control}
-                  name="dueDate"
+                  name="vencimento"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
                       <FormLabel>Data de Vencimento</FormLabel>
@@ -198,7 +198,7 @@ export function EditExpenseForm({ expense }: { expense: Expense }) {
             </div>
             <FormField
               control={form.control}
-              name="type"
+              name="tipo"
               render={({ field }) => (
                  <FormItem className="flex flex-col">
                   <FormLabel>Tipo de Despesa</FormLabel>
@@ -217,12 +217,12 @@ export function EditExpenseForm({ expense }: { expense: Expense }) {
             />
             <FormField
               control={form.control}
-              name="createdBy"
+              name="user_id"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Criado por</FormLabel>
+                  <FormLabel>ID do Usuário</FormLabel>
                   <FormControl>
-                    <Input placeholder="Seu nome" {...field} disabled />
+                    <Input type="number" placeholder="ID do usuário" {...field} disabled />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

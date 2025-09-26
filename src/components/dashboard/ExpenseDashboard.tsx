@@ -28,16 +28,11 @@ const statusConfig: Record<ExpenseStatus, { title: string; icon: ReactNode }> = 
 
 const statusOrder: ExpenseStatus[] = ['due', 'due-soon', 'overdue', 'paid'];
 
-type FilterField = 'name' | 'type' | 'dueDate' | 'createdBy';
+type FilterField = 'nome' | 'tipo' | 'vencimento' | 'user_id';
 
 function DashboardSkeleton() {
     return (
         <div className="flex flex-col gap-8">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {statusOrder.map((status) => (
-                    <CardSkeleton key={status} />
-                ))}
-            </div>
             <div className="rounded-xl border bg-card text-card-foreground shadow-sm">
                 <div className="flex flex-col space-y-1.5 p-6">
                     <Skeleton className="h-8 w-48" />
@@ -67,35 +62,12 @@ function CardSkeleton() {
     )
   }
   
-function getDynamicStatus(dueDate: Date, status: ExpenseStatus, dueSoonDays: number): ExpenseStatus {
-    if (status === 'paid') {
-      return 'paid';
-    }
-    const today = startOfDay(new Date());
-    const due = startOfDay(dueDate);
-  
-    if (isBefore(due, today)) {
-      return 'overdue';
-    }
-  
-    const daysUntilDue = differenceInDays(due, today);
-  
-    if (daysUntilDue <= dueSoonDays) {
-      return 'due-soon';
-    }
-  
-    return 'due';
-}
-
-
 export function ExpenseDashboard() {
   const [rawExpenses, setRawExpenses] = useState<Expense[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedStatus, setSelectedStatus] = useState<ExpenseStatus>('due');
-  const [dueSoonDays, setDueSoonDays] = useState(5);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(6);
-  const [filterField, setFilterField] = useState<FilterField>('name');
+  const [filterField, setFilterField] = useState<FilterField>('nome');
   const [filterValue, setFilterValue] = useState<string | Date | undefined>('');
 
   const fetchAndSetExpenses = useCallback(async () => {
@@ -115,57 +87,37 @@ export function ExpenseDashboard() {
     fetchAndSetExpenses();
   }, [fetchAndSetExpenses]);
 
-  const expenses = useMemo(() => {
-    return rawExpenses.map(expense => {
-        const dueDate = parseISO(expense.dueDate);
-        return {
-            ...expense,
-            status: getDynamicStatus(dueDate, expense.status, dueSoonDays)
-        }
-    });
-  }, [rawExpenses, dueSoonDays]);
-
   const expenseTypes = useMemo(() => {
-    const types = new Set(expenses.map(e => e.type));
+    const types = new Set(rawExpenses.map(e => e.tipo));
     return ['Todos', ...Array.from(types)];
-  }, [expenses]);
+  }, [rawExpenses]);
   
   useEffect(() => {
     setFilterValue('');
   }, [filterField]);
 
-  const statusCounts = useMemo(() => {
-    const counts: Record<ExpenseStatus, number> = { due: 0, 'due-soon': 0, overdue: 0, paid: 0 };
-    expenses.forEach((expense) => {
-      counts[expense.status] = (counts[expense.status] || 0) + 1;
-    });
-    return counts;
-  }, [expenses]);
-
   const filteredExpenses = useMemo(() => {
-    return expenses.filter((e) => {
-        if (e.status !== selectedStatus) return false;
-        
+    return rawExpenses.filter((e) => {
         if (!filterValue) return true;
 
         switch (filterField) {
-            case 'name':
-                return e.name.toLowerCase().startsWith((filterValue as string).toLowerCase());
-            case 'createdBy':
-                return e.createdBy.toLowerCase().startsWith((filterValue as string).toLowerCase());
-            case 'type':
-                 return filterValue === 'Todos' || e.type === filterValue;
-            case 'dueDate':
-                return isSameDay(parseISO(e.dueDate), filterValue as Date);
+            case 'nome':
+                return e.nome.toLowerCase().startsWith((filterValue as string).toLowerCase());
+            case 'user_id':
+                return e.user_id.toString().startsWith((filterValue as string));
+            case 'tipo':
+                 return filterValue === 'Todos' || e.tipo === filterValue;
+            case 'vencimento':
+                return isSameDay(parseISO(e.vencimento), filterValue as Date);
             default:
                 return true;
         }
     });
-  }, [expenses, selectedStatus, filterField, filterValue]);
+  }, [rawExpenses, filterField, filterValue]);
   
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedStatus, itemsPerPage, filterField, filterValue]);
+  }, [itemsPerPage, filterField, filterValue]);
 
   const totalPages = Math.ceil(filteredExpenses.length / itemsPerPage) || 1;
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -173,12 +125,12 @@ export function ExpenseDashboard() {
   const currentExpenses = filteredExpenses.slice(indexOfFirstItem, indexOfLastItem);
 
   const totalAmount = useMemo(() => {
-    return currentExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+    return currentExpenses.reduce((sum, expense) => sum + expense.valor, 0);
   }, [currentExpenses]);
   
   const renderFilterInput = () => {
     switch (filterField) {
-        case 'dueDate':
+        case 'vencimento':
             return (
                 <Popover>
                     <PopoverTrigger asChild>
@@ -203,7 +155,7 @@ export function ExpenseDashboard() {
                     </PopoverContent>
                 </Popover>
             );
-        case 'type':
+        case 'tipo':
             return (
                  <Select value={filterValue as string || 'Todos'} onValueChange={(value) => setFilterValue(value)}>
                     <SelectTrigger className="w-full sm:w-64">
@@ -216,8 +168,8 @@ export function ExpenseDashboard() {
                     </SelectContent>
                 </Select>
             );
-        case 'name':
-        case 'createdBy':
+        case 'nome':
+        case 'user_id':
         default:
             return (
                 <div className="relative w-full sm:w-64">
@@ -234,28 +186,12 @@ export function ExpenseDashboard() {
     }
   }
 
-  if (isLoading && expenses.length === 0) {
+  if (isLoading && rawExpenses.length === 0) {
     return <DashboardSkeleton />;
   }
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {statusOrder.map((status) => (
-          <StatusCard
-            key={status}
-            title={statusConfig[status].title}
-            count={statusCounts[status] || 0}
-            icon={statusConfig[status].icon}
-            status={status}
-            isSelected={selectedStatus === status}
-            onClick={() => setSelectedStatus(status)}
-            dueSoonDays={dueSoonDays}
-            setDueSoonDays={setDueSoonDays}
-          />
-        ))}
-      </div>
-
       <div className="rounded-xl border bg-card text-card-foreground shadow-sm relative">
         {isLoading && rawExpenses.length > 0 && (
           <div className="absolute inset-0 bg-background/50 flex items-center justify-center z-10">
@@ -265,7 +201,7 @@ export function ExpenseDashboard() {
         <div className="flex flex-col space-y-4 p-6">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                 <h3 className="font-headline text-2xl font-semibold leading-none tracking-tight w-full sm:w-auto">
-                    Despesas {statusConfig[selectedStatus].title}
+                    Despesas
                 </h3>
                 <div className="flex items-center gap-4 w-full sm:w-auto flex-wrap">
                     <div className="flex items-center gap-2">
@@ -275,10 +211,10 @@ export function ExpenseDashboard() {
                                 <SelectValue placeholder="Filtrar por..." />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="name">Nome da Despesa</SelectItem>
-                                <SelectItem value="type">Tipo</SelectItem>
-                                <SelectItem value="dueDate">Data de Vencimento</SelectItem>
-                                <SelectItem value="createdBy">Criado Por</SelectItem>
+                                <SelectItem value="nome">Nome da Despesa</SelectItem>
+                                <SelectItem value="tipo">Tipo</SelectItem>
+                                <SelectItem value="vencimento">Data de Vencimento</SelectItem>
+                                <SelectItem value="user_id">Criado Por (ID)</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -294,7 +230,7 @@ export function ExpenseDashboard() {
         <div className="p-6 pt-0">
           <AnimatePresence mode="wait">
             <motion.div
-              key={selectedStatus + currentPage + itemsPerPage + filterField + String(filterValue)}
+              key={currentPage + itemsPerPage + filterField + String(filterValue)}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
