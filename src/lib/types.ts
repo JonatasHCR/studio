@@ -8,6 +8,7 @@ export interface Expense {
   valor: number;
   vencimento: string; // ISO string
   user_id: number;
+  userName?: string;
 }
 
 export interface User {

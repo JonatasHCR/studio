@@ -104,7 +104,8 @@ export function ExpenseDashboard() {
             case 'nome':
                 return e.nome.toLowerCase().startsWith((filterValue as string).toLowerCase());
             case 'user_id':
-                return e.user_id.toString().startsWith((filterValue as string));
+                const userIdFilter = (e.userName || String(e.user_id)).toLowerCase();
+                return userIdFilter.startsWith((filterValue as string).toLowerCase());
             case 'tipo':
                  return filterValue === 'Todos' || e.tipo === filterValue;
             case 'vencimento':
@@ -214,7 +215,7 @@ export function ExpenseDashboard() {
                                 <SelectItem value="nome">Nome da Despesa</SelectItem>
                                 <SelectItem value="tipo">Tipo</SelectItem>
                                 <SelectItem value="vencimento">Data de Vencimento</SelectItem>
-                                <SelectItem value="user_id">Criado Por (ID)</SelectItem>
+                                <SelectItem value="user_id">Criado Por</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>

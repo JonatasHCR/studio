@@ -35,12 +35,17 @@ export const signIn = async (credentials: Pick<User, 'name' | 'password'>): Prom
 
 // --- Expenses API ---
 export const getExpenses = async (): Promise<Expense[]> => {
-  return fetchWrapper<Expense[]>('/despesas/');
+  return fetchWrapper<Expense[]>('/despesas');
 };
 
 export const getExpenseById = async (id: string): Promise<Expense | null> => {
   try {
     const expense = await fetchWrapper<Expense>(`/despesas/${id}`);
+    // Ideally, the API would return the user's name. We'll try to fetch it if not provided.
+    if (expense && !expense.userName) {
+        // This is a placeholder. In a real app, you might fetch user details separately.
+        expense.userName = `Usuário ${expense.user_id}`;
+    }
     return expense;
   } catch (error) {
     console.error(`Failed to fetch expense ${id}:`, error);
@@ -48,17 +53,25 @@ export const getExpenseById = async (id: string): Promise<Expense | null> => {
   }
 };
 
-export const addExpense = async (data: Omit<Expense, 'id'>): Promise<Expense> => {
-  return fetchWrapper<Expense>('/despesas/', {
+export const addExpense = async (data: Omit<Expense, 'id' | 'userName'>): Promise<Expense> => {
+  return fetchWrapper<Expense>('/despesas', {
     method: 'POST',
-    body: JSON.stringify(data),
+    body: JSON.stringify({
+        ...data,
+        user_id: Number(data.user_id),
+    }),
   });
 };
 
-export const updateExpense = async (id: string, data: Partial<Omit<Expense, 'id'>>): Promise<Expense> => {
-  return fetchWrapper<Expense>(`/despesas/${id}`, {
+export const updateExpense = async (id: string, data: Partial<Omit<Expense, 'id' | 'userName'>>): Promise<Expense> => {
+    const payload: { [key: string]: any } = { ...data };
+    if (data.user_id) {
+        payload.user_id = Number(data.user_id);
+    }
+  
+    return fetchWrapper<Expense>(`/despesas/${id}`, {
     method: 'PUT',
-    body: JSON.stringify(data),
+    body: JSON.stringify(payload),
   });
 };
 

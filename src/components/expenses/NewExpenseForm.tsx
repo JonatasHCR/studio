@@ -42,7 +42,8 @@ const expenseFormSchema = z.object({
   tipo: z.string().min(1, {
     message: 'Selecione ou crie um tipo de despesa.',
   }),
-  user_id: z.number(),
+  user_id: z.number().int(),
+  userName: z.string().optional(),
 });
 
 type ExpenseFormValues = z.infer<typeof expenseFormSchema>;
@@ -61,6 +62,7 @@ export function NewExpenseForm() {
       tipo: '',
       valor: '',
       user_id: 0,
+      userName: '',
     },
   });
 
@@ -70,6 +72,7 @@ export function NewExpenseForm() {
       const userData: User = JSON.parse(session);
       setUser(userData);
       form.setValue('user_id', userData.id);
+      form.setValue('userName', userData.name);
     }
   }, [form]);
 
@@ -77,13 +80,15 @@ export function NewExpenseForm() {
     if (!user) return;
     setIsSubmitting(true);
     try {
-      await addExpense({
-        ...data,
+      const expenseData = {
         nome: data.nome.toUpperCase(),
         tipo: data.tipo.toUpperCase(),
         valor: parseFloat(data.valor.replace(',', '.')),
         vencimento: data.vencimento.toISOString(),
-      });
+        user_id: Number(data.user_id)
+      };
+
+      await addExpense(expenseData);
 
       toast({
         title: 'Sucesso!',
@@ -214,12 +219,12 @@ export function NewExpenseForm() {
             />
             <FormField
               control={form.control}
-              name="user_id"
+              name="userName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>ID do Usuário</FormLabel>
+                  <FormLabel>Usuário</FormLabel>
                   <FormControl>
-                    <Input placeholder="Seu ID" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || 0)} disabled />
+                    <Input placeholder="Seu nome" {...field} disabled />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

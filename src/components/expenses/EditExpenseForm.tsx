@@ -42,7 +42,8 @@ const expenseFormSchema = z.object({
   tipo: z.string().min(1, {
     message: 'Selecione ou crie um tipo de despesa.',
   }),
-  user_id: z.number(),
+  user_id: z.number().int(),
+  userName: z.string().optional(),
 });
 
 type ExpenseFormValues = z.infer<typeof expenseFormSchema>;
@@ -61,19 +62,22 @@ export function EditExpenseForm({ expense }: { expense: Expense }) {
       vencimento: parseISO(expense.vencimento),
       tipo: expense.tipo,
       user_id: expense.user_id,
+      userName: expense.userName || String(expense.user_id),
     },
   });
   
   async function onSubmit(data: ExpenseFormValues) {
     setIsSubmitting(true);
     try {
-      await updateExpense(String(expense.id), {
-        ...data,
+      const expenseData = {
         nome: data.nome.toUpperCase(),
         tipo: data.tipo.toUpperCase(),
         valor: parseFloat(data.valor.replace(',', '.')),
         vencimento: data.vencimento.toISOString(),
-      });
+        user_id: Number(data.user_id)
+      };
+
+      await updateExpense(String(expense.id), expenseData);
 
       toast({
         title: 'Sucesso!',
@@ -204,12 +208,12 @@ export function EditExpenseForm({ expense }: { expense: Expense }) {
             />
             <FormField
               control={form.control}
-              name="user_id"
+              name="userName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>ID do Usuário</FormLabel>
+                  <FormLabel>Usuário</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="ID do usuário" {...field}  onChange={e => field.onChange(parseInt(e.target.value, 10) || 0)} disabled />
+                    <Input type="text" placeholder="Nome do usuário" {...field} disabled />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

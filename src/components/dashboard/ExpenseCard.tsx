@@ -126,7 +126,7 @@ export function ExpenseCard({ expense, onUpdate }: ExpenseCardProps) {
                     <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                         <User className="h-4 w-4" />
                         <span>
-                            ID do Usuário: {expense.user_id}
+                            Criado por: {expense.userName || expense.user_id}
                         </span>
                     </div>
                 </div>
