@@ -73,7 +73,7 @@ export function Combobox({ options, value, onChange, placeholder, noResultsText}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-        <Command shouldFilter={true}>
+        <Command shouldFilter={false}>
             <CommandInput 
                 placeholder={placeholder || "Search..."} 
                 onValueChange={onChange}

@@ -54,6 +54,16 @@ export function NewExpenseForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [expenseTypes, setExpenseTypes] = useState<string[]>([]);
 
+  const form = useForm<ExpenseFormValues>({
+    resolver: zodResolver(expenseFormSchema),
+    defaultValues: {
+      name: '',
+      createdBy: 'Usuário Exemplo', // Default creator
+      type: '',
+      amount: '',
+    },
+  });
+
   useEffect(() => {
     async function fetchExpenseTypes() {
         try {
@@ -75,17 +85,9 @@ export function NewExpenseForm() {
       allTypes.add(currentValue);
     }
     return Array.from(allTypes).map(type => ({ value: type, label: type }));
-  }, [expenseTypes, form.watch('type')]);
+  }, [expenseTypes, form]);
 
-  const form = useForm<ExpenseFormValues>({
-    resolver: zodResolver(expenseFormSchema),
-    defaultValues: {
-      name: '',
-      createdBy: 'Usuário Exemplo', // Default creator
-      type: '',
-      amount: '',
-    },
-  });
+
 
   async function onSubmit(data: ExpenseFormValues) {
     setIsSubmitting(true);
