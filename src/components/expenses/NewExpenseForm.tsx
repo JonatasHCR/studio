@@ -40,7 +40,7 @@ const expenseFormSchema = z.object({
     required_error: 'A data de vencimento é obrigatória.',
   }),
   type: z.string().min(1, {
-    message: 'Selecione um tipo de despesa.',
+    message: 'Selecione ou crie um tipo de despesa.',
   }),
   createdBy: z.string().min(1, 'O criador é obrigatório'),
 });
@@ -92,6 +92,7 @@ export function NewExpenseForm() {
     try {
       await addExpense({
         ...data,
+        type: data.type.toUpperCase(),
         amount: parseFloat(data.amount.replace(',', '.')),
         dueDate: data.dueDate.toISOString(),
         status: 'due',
@@ -117,6 +118,14 @@ export function NewExpenseForm() {
   }
 
   const comboboxOptions = useMemo(() => expenseTypes.map(type => ({ value: type, label: type })), [expenseTypes]);
+  
+  const handleTypeChange = (value: string) => {
+    const upperCaseValue = value.toUpperCase();
+    form.setValue('type', upperCaseValue);
+    if (value && !expenseTypes.includes(upperCaseValue)) {
+      setExpenseTypes(prev => [...prev, upperCaseValue]);
+    }
+  };
 
   return (
     <Card>
@@ -133,8 +142,6 @@ export function NewExpenseForm() {
                     <Input
                       placeholder="Ex: Conta de Luz"
                       {...field}
-                      onChange={(e) => field.onChange(e.target.value.toUpperCase())}
-                      className="uppercase"
                     />
                   </FormControl>
                   <FormMessage />
@@ -206,10 +213,11 @@ export function NewExpenseForm() {
                     <Combobox
                       options={comboboxOptions}
                       value={field.value}
-                      onChange={field.onChange}
-                      placeholder="Selecione um tipo"
-                      searchPlaceholder="Pesquisar tipo..."
-                      emptyMessage="Nenhum tipo encontrado."
+                      onChange={handleTypeChange}
+                      placeholder="Selecione ou crie um tipo"
+                      searchPlaceholder="Pesquisar ou criar..."
+                      emptyMessage="Nenhum tipo encontrado. Crie um novo."
+                      isCreatable={true}
                     />
                   <FormMessage />
                 </FormItem>

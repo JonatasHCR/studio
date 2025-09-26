@@ -82,6 +82,7 @@ export function EditExpenseForm({ expense }: { expense: Expense }) {
     try {
       await updateExpense(expense.id, {
         ...data,
+        type: data.type.toUpperCase(),
         amount: parseFloat(data.amount.replace(',', '.')),
         dueDate: data.dueDate.toISOString(),
       });
@@ -106,6 +107,14 @@ export function EditExpenseForm({ expense }: { expense: Expense }) {
   }
 
   const comboboxOptions = useMemo(() => expenseTypes.map(type => ({ value: type, label: type })), [expenseTypes]);
+  
+  const handleTypeChange = (value: string) => {
+    const upperCaseValue = value.toUpperCase();
+    form.setValue('type', upperCaseValue);
+    if (value && !expenseTypes.includes(upperCaseValue)) {
+      setExpenseTypes(prev => [...prev, upperCaseValue]);
+    }
+  };
 
   return (
     <Card>
@@ -122,8 +131,6 @@ export function EditExpenseForm({ expense }: { expense: Expense }) {
                     <Input
                       placeholder="Ex: Conta de Luz"
                       {...field}
-                      onChange={(e) => field.onChange(e.target.value.toUpperCase())}
-                      className="uppercase"
                     />
                   </FormControl>
                   <FormMessage />
@@ -195,10 +202,11 @@ export function EditExpenseForm({ expense }: { expense: Expense }) {
                     <Combobox
                         options={comboboxOptions}
                         value={field.value}
-                        onChange={field.onChange}
-                        placeholder="Selecione um tipo"
-                        searchPlaceholder="Pesquisar tipo..."
-                        emptyMessage="Nenhum tipo encontrado."
+                        onChange={handleTypeChange}
+                        placeholder="Selecione ou crie um tipo"
+                        searchPlaceholder="Pesquisar ou criar..."
+                        emptyMessage="Nenhum tipo encontrado. Crie um novo."
+                        isCreatable={true}
                     />
                   <FormMessage />
                 </FormItem>
