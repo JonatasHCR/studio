@@ -178,9 +178,8 @@ export function ExpenseDashboard() {
                 </div>
             </div>
              <div className="flex items-center justify-end gap-2 text-lg font-semibold text-muted-foreground">
-                <DollarSign className="h-5 w-5"/>
                 <span>
-                    Total da página: {totalAmount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                    {totalAmount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                 </span>
             </div>
         </div>

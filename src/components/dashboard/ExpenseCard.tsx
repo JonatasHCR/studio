@@ -29,9 +29,8 @@ export function ExpenseCard({ expense }: { expense: Expense }) {
             </div>
             <div className="flex items-center gap-1">
                 <div className={cn("flex items-center gap-1.5 text-lg font-bold", styles.text)}>
-                    <DollarSign className="h-5 w-5" />
                     <span>
-                        {expense.amount.toLocaleString('pt-BR')}
+                        {expense.amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                     </span>
                 </div>
                 <DropdownMenu>
