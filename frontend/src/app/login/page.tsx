@@ -18,7 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { signIn } from '@/lib/api';
 
 const loginFormSchema = z.object({
@@ -36,6 +36,16 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(true);
+
+  useEffect(() => {
+    const session = localStorage.getItem('userSession');
+    if (session) {
+      router.replace('/');
+    } else {
+      setIsVerifying(false);
+    }
+  }, [router]);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginFormSchema),
@@ -69,6 +79,14 @@ export default function LoginPage() {
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  if (isVerifying) {
+    return (
+        <div className="flex h-screen w-full items-center justify-center">
+            <Loader className="h-8 w-8 animate-spin text-primary" />
+        </div>
+    );
   }
 
   return (
@@ -129,5 +147,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
-    
