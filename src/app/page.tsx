@@ -4,11 +4,10 @@ import { ExpenseDashboard } from '@/components/dashboard/ExpenseDashboard';
 import { Button } from '@/components/ui/button';
 import { FileSpreadsheet, PlusCircle, LogOut } from 'lucide-react';
 import Link from 'next/link';
-import { useUser as useAuth } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useFirebase } from '@/firebase';
-import { signOut as firebaseSignOut } from 'firebase/auth';
+import { useEffect, useState } from 'react';
+
 
 function HomePageSkeleton() {
     return (
@@ -36,26 +35,26 @@ function HomePageSkeleton() {
 }
 
 export default function Home() {
-  const { user, isLoading } = useAuth();
-  const { auth } = useFirebase();
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
-  const handleSignOut = async () => {
-    if(auth) {
-      await firebaseSignOut(auth);
+  useEffect(() => {
+    const session = localStorage.getItem('userSession');
+    if (!session) {
       router.push('/login');
+    } else {
+      setIsLoading(false);
     }
+  }, [router]);
+
+  const handleSignOut = async () => {
+    localStorage.removeItem('userSession');
+    router.push('/login');
   }
 
   if (isLoading) {
     return <HomePageSkeleton />;
   }
-
-  if (!user && !isLoading) {
-    router.push('/login');
-    return null; 
-  }
-
 
   return (
     <main className="min-h-screen bg-background">

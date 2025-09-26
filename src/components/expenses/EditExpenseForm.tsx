@@ -26,8 +26,7 @@ import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Combobox } from '../ui/combobox';
 import { type Expense } from '@/lib/types';
-import { useFirebase } from '@/firebase';
-import { doc, updateDoc, collection, getDocs, Timestamp, serverTimestamp } from 'firebase/firestore';
+import { updateExpense, getExpenses } from '@/lib/api';
 
 
 const expenseFormSchema = z.object({
@@ -53,7 +52,6 @@ export function EditExpenseForm({ expense }: { expense: Expense }) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [expenseTypes, setExpenseTypes] = useState<string[]>([]);
-  const { firestore } = useFirebase();
 
   const form = useForm<ExpenseFormValues>({
     resolver: zodResolver(expenseFormSchema),
@@ -68,32 +66,28 @@ export function EditExpenseForm({ expense }: { expense: Expense }) {
   
   useEffect(() => {
     async function fetchExpenseTypes() {
-        if (!firestore) return;
         try {
-            const querySnapshot = await getDocs(collection(firestore, "expenses"));
-            const types = new Set(querySnapshot.docs.map(doc => doc.data().type as string));
+            const expenses = await getExpenses();
+            const types = new Set(expenses.map(e => e.type as string));
             setExpenseTypes(Array.from(types));
         } catch (error) {
             console.error("Failed to fetch expense types:", error);
         }
     }
     fetchExpenseTypes();
-  }, [firestore]);
+  }, []);
   
   const comboboxOptions = useMemo(() => {
     return expenseTypes.map(type => ({ value: type, label: type }));
   }, [expenseTypes]);
 
   async function onSubmit(data: ExpenseFormValues) {
-    if (!firestore) return;
     setIsSubmitting(true);
     try {
-      const expenseRef = doc(firestore, 'expenses', expense.id);
-      await updateDoc(expenseRef, {
+      await updateExpense(expense.id, {
         ...data,
         amount: parseFloat(data.amount.replace(',', '.')),
-        dueDate: Timestamp.fromDate(data.dueDate),
-        updatedAt: serverTimestamp(),
+        dueDate: data.dueDate.toISOString(),
       });
 
       toast({

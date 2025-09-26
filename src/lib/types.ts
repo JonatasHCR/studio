@@ -1,4 +1,3 @@
-import { type Timestamp } from 'firebase/firestore';
 
 export type ExpenseStatus = 'due' | 'due-soon' | 'overdue' | 'paid';
 
@@ -7,14 +6,16 @@ export interface Expense {
   name: string;
   type: string;
   amount: number;
-  dueDate: string; // Should be ISO string
+  dueDate: string; // ISO string
   status: ExpenseStatus;
   createdBy: string;
-  createdAt?: Timestamp;
-  updatedAt?: Timestamp;
+  createdAt: string; // ISO string
+  updatedAt: string; // ISO string
 }
 
-
-export type ExpenseDocument = Omit<Expense, 'id' | 'dueDate'> & {
-  dueDate: Timestamp;
-};
+export interface User {
+    id: string;
+    name: string;
+    email: string;
+    password?: string;
+}

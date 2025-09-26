@@ -8,8 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useToast } from '@/hooks/use-toast';
 import { Loader, UserPlus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { useFirebase } from '@/firebase';
+import { signUp } from '@/lib/api';
 import Link from 'next/link';
 
 export default function SignupPage() {
@@ -17,39 +16,23 @@ export default function SignupPage() {
   const [email, setEmail] = useState('adm@example.com');
   const [password, setPassword] = useState('123456');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { auth } = useFirebase();
   const { toast } = useToast();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth) return;
     setIsSubmitting(true);
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      
-      // Update user profile with display name
-      if(userCredential.user) {
-        await updateProfile(userCredential.user, {
-            displayName: name
-        });
-      }
-
+      await signUp({ name, email, password });
       toast({
         title: 'Sucesso!',
         description: 'Sua conta foi criada. Você será redirecionado para o login.',
       });
-      
       router.push('/login');
-
     } catch (error) {
       let description = 'Ocorreu um erro ao criar sua conta.';
       if (error instanceof Error) {
-        if ((error as any).code === 'auth/email-already-in-use') {
-            description = 'Este e-mail já está em uso por outra conta.';
-        } else if ((error as any).code === 'auth/weak-password') {
-            description = 'A senha é muito fraca. Tente uma senha mais forte.';
-        }
+          description = error.message;
       }
       
       toast({
@@ -57,7 +40,6 @@ export default function SignupPage() {
         title: 'Falha no Cadastro',
         description: description,
       });
-
       setIsSubmitting(false);
     }
   };

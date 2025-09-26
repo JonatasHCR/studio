@@ -8,25 +8,27 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useToast } from '@/hooks/use-toast';
 import { Loader, LogIn } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { useFirebase } from '@/firebase';
+import { signIn } from '@/lib/api';
 import Link from 'next/link';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('adm@example.com');
   const [password, setPassword] = useState('123456');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { auth } = useFirebase();
   const { toast } = useToast();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth) return;
     setIsSubmitting(true);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      router.push('/');
+      const user = await signIn({ email, password });
+      if (user) {
+        localStorage.setItem('userSession', JSON.stringify(user));
+        router.push('/');
+      } else {
+        throw new Error('User not found or password incorrect');
+      }
     } catch (error) {
       toast({
         variant: 'destructive',

@@ -23,8 +23,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
-import { useFirebase } from '@/firebase';
+import { updateExpense, deleteExpense } from '@/lib/api';
 
 
 const statusStyles: Record<ExpenseStatus, { text: string; border: string }> = {
@@ -36,9 +35,10 @@ const statusStyles: Record<ExpenseStatus, { text: string; border: string }> = {
 
 interface ExpenseCardProps {
   expense: Expense;
+  onUpdate: () => void;
 }
 
-export function ExpenseCard({ expense }: ExpenseCardProps) {
+export function ExpenseCard({ expense, onUpdate }: ExpenseCardProps) {
   const dueDate = new Date(expense.dueDate);
   const styles = statusStyles[expense.status];
   const { toast } = useToast();
@@ -46,19 +46,16 @@ export function ExpenseCard({ expense }: ExpenseCardProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isStatusAlertOpen, setIsStatusAlertOpen] = useState(false);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
-  const { firestore } = useFirebase();
 
   const handleStatusChange = async (newStatus: ExpenseStatus) => {
-    if (!firestore) return;
     setIsUpdating(true);
     try {
-      const expenseRef = doc(firestore, 'expenses', expense.id);
-      await updateDoc(expenseRef, { status: newStatus });
-      
+      await updateExpense(expense.id, { status: newStatus });
       toast({
         title: 'Sucesso!',
         description: `Despesa marcada como ${newStatus === 'paid' ? 'paga' : 'não paga'}.`,
       });
+      onUpdate();
     } catch (error) {
        toast({
         variant: 'destructive',
@@ -72,16 +69,14 @@ export function ExpenseCard({ expense }: ExpenseCardProps) {
   };
 
   const handleDelete = async () => {
-    if (!firestore) return;
     setIsDeleting(true);
     try {
-      const expenseRef = doc(firestore, 'expenses', expense.id);
-      await deleteDoc(expenseRef);
-
+      await deleteExpense(expense.id);
       toast({
           title: 'Sucesso!',
           description: 'A despesa foi excluída.',
       });
+      onUpdate();
     } catch (error) {
         toast({
             variant: 'destructive',

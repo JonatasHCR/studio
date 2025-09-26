@@ -2,13 +2,13 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { EditExpenseForm } from '@/components/expenses/EditExpenseForm';
-import { useDoc } from '@/firebase';
 import { Pencil } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
-import { useUser as useAuth } from '@/firebase';
-import { doc } from 'firebase/firestore';
-import { useFirebase } from '@/firebase';
+import { useEffect, useState } from 'react';
+import { getExpenseById } from '@/lib/api';
+import { type Expense } from '@/lib/types';
+
 
 function EditExpensePageSkeleton() {
     return (
@@ -61,26 +61,41 @@ export default function EditExpensePage() {
   const params = useParams();
   const id = params.id as string;
   const router = useRouter();
-  const { firestore } = useFirebase();
-  
-  const expenseRef = id && firestore ? doc(firestore, 'expenses', id) : null;
-  const { data: expense, isLoading: expenseLoading } = useDoc(expenseRef);
-  const { user, isLoading: authLoading } = useAuth();
+  const [expense, setExpense] = useState<Expense | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  if (authLoading) {
+  useEffect(() => {
+    // Simulate user check
+    const session = localStorage.getItem('userSession');
+    if (!session) {
+      router.push('/login');
+      return;
+    }
+
+    async function fetchExpense() {
+        try {
+            const data = await getExpenseById(id);
+            if(data) {
+                setExpense(data);
+            }
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    if (id) {
+        fetchExpense();
+    }
+  }, [id, router]);
+
+
+  if (loading) {
     return <EditExpensePageSkeleton />;
   }
 
-  if (!user) {
-    router.push('/login');
-    return null;
-  }
-  
-  if (expenseLoading) {
-    return <EditExpensePageSkeleton />;
-  }
-
-  if (!expense && !expenseLoading) {
+  if (!expense && !loading) {
     return (
         <div className="min-h-screen bg-background flex items-center justify-center">
             <div className="text-center">

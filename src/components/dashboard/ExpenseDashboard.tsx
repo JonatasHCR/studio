@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, type ReactNode, useEffect } from 'react';
+import { useState, useMemo, type ReactNode, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { type Expense, type ExpenseStatus } from '@/lib/types';
 import { StatusCard } from '@/components/dashboard/StatusCard';
@@ -17,9 +17,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { format, isSameDay, parseISO, startOfDay, isBefore, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, query, Timestamp } from 'firebase/firestore';
-import { useFirebase } from '@/firebase';
+import { getExpenses } from '@/lib/api';
 
 const statusConfig: Record<ExpenseStatus, { title: string; icon: ReactNode }> = {
   due: { title: 'A Vencer', icon: <FileText className="h-8 w-8" /> },
@@ -91,10 +89,8 @@ function getDynamicStatus(dueDate: Date, status: ExpenseStatus, dueSoonDays: num
 
 
 export function ExpenseDashboard() {
-  const { firestore } = useFirebase();
-  const expensesQuery = firestore ? query(collection(firestore, 'expenses')) : null;
-  const { data: rawExpenses = [], isLoading } = useCollection<Expense>(expensesQuery);
-  
+  const [rawExpenses, setRawExpenses] = useState<Expense[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState<ExpenseStatus>('due');
   const [dueSoonDays, setDueSoonDays] = useState(5);
   const [currentPage, setCurrentPage] = useState(1);
@@ -102,13 +98,28 @@ export function ExpenseDashboard() {
   const [filterField, setFilterField] = useState<FilterField>('name');
   const [filterValue, setFilterValue] = useState<string | Date | undefined>('');
 
+  const fetchAndSetExpenses = useCallback(async () => {
+    setIsLoading(true);
+    try {
+        const data = await getExpenses();
+        setRawExpenses(data);
+    } catch (error) {
+        console.error(error);
+        setRawExpenses([]);
+    } finally {
+        setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAndSetExpenses();
+  }, [fetchAndSetExpenses]);
+
   const expenses = useMemo(() => {
     return rawExpenses.map(expense => {
-        // Firestore timestamp to JS Date
-        const dueDate = (expense.dueDate as unknown as Timestamp).toDate();
+        const dueDate = parseISO(expense.dueDate);
         return {
             ...expense,
-            dueDate: dueDate.toISOString(), // Keep it as ISO string for consistency
             status: getDynamicStatus(dueDate, expense.status, dueSoonDays)
         }
     });
@@ -299,7 +310,7 @@ export function ExpenseDashboard() {
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: index * 0.05 }}
                     >
-                      <ExpenseCard expense={expense} />
+                      <ExpenseCard expense={expense} onUpdate={fetchAndSetExpenses} />
                     </motion.div>
                   ))}
                 </div>

@@ -25,9 +25,8 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Combobox } from '../ui/combobox';
-import { useUser as useAuth } from '@/firebase';
-import { useFirebase } from '@/firebase';
-import { addDoc, collection, getDocs, Timestamp, serverTimestamp } from 'firebase/firestore';
+import { addExpense, getExpenses } from '@/lib/api';
+import { type User } from '@/lib/types';
 
 
 const expenseFormSchema = z.object({
@@ -51,10 +50,9 @@ type ExpenseFormValues = z.infer<typeof expenseFormSchema>;
 export function NewExpenseForm() {
   const router = useRouter();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const [user, setUser] = useState<User | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [expenseTypes, setExpenseTypes] = useState<string[]>([]);
-  const { firestore } = useFirebase();
   
   const form = useForm<ExpenseFormValues>({
     resolver: zodResolver(expenseFormSchema),
@@ -67,42 +65,41 @@ export function NewExpenseForm() {
   });
 
   useEffect(() => {
-    if (user) {
-      form.setValue('createdBy', user.displayName || user.email || 'Usuário');
+    const session = localStorage.getItem('userSession');
+    if (session) {
+      const userData: User = JSON.parse(session);
+      setUser(userData);
+      form.setValue('createdBy', userData.name);
     }
-  }, [user, form]);
+  }, [form]);
 
   useEffect(() => {
     async function fetchExpenseTypes() {
-        if (!firestore) return;
         try {
-            const querySnapshot = await getDocs(collection(firestore, "expenses"));
-            const types = new Set(querySnapshot.docs.map(doc => doc.data().type as string));
+            const expenses = await getExpenses();
+            const types = new Set(expenses.map(doc => doc.type as string));
             setExpenseTypes(Array.from(types));
         } catch (error) {
             console.error("Failed to fetch expense types:", error);
         }
     }
     fetchExpenseTypes();
-  }, [firestore]);
+  }, []);
 
   const comboboxOptions = useMemo(() => {
     return expenseTypes.map(type => ({ value: type, label: type }));
   }, [expenseTypes]);
 
 
-
   async function onSubmit(data: ExpenseFormValues) {
-    if (!firestore || !user) return;
+    if (!user) return;
     setIsSubmitting(true);
     try {
-      await addDoc(collection(firestore, 'expenses'), {
+      await addExpense({
         ...data,
         amount: parseFloat(data.amount.replace(',', '.')),
-        dueDate: Timestamp.fromDate(data.dueDate),
+        dueDate: data.dueDate.toISOString(),
         status: 'due',
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
       });
 
       toast({
