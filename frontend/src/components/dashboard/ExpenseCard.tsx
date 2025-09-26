@@ -1,10 +1,10 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '../ui/dropdown-menu';
 import { type Expense, type ExpenseStatus } from '../../lib/types';
-import { CalendarDays, MoreVertical, Pencil, User, Loader, Trash2, Tag } from 'lucide-react';
+import { CalendarDays, MoreVertical, Pencil, User, Loader, Trash2, Check, X } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '../../lib/utils';
@@ -19,11 +19,10 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "../ui/alert-dialog"
 import { useState } from 'react';
 import { useToast } from '../../hooks/use-toast';
-import { deleteExpense } from '../../lib/api';
+import { deleteExpense, updateExpense } from '../../lib/api';
 
 interface ExpenseCardProps {
   expense: Expense;
@@ -40,7 +39,9 @@ export function ExpenseCard({ expense, onUpdate }: ExpenseCardProps) {
   const dueDate = parseISO(expense.vencimento);
   const { toast } = useToast();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
+  const [isStatusAlertOpen, setIsStatusAlertOpen] = useState(false);
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -63,10 +64,37 @@ export function ExpenseCard({ expense, onUpdate }: ExpenseCardProps) {
     }
   };
 
+  const handleStatusChange = async () => {
+    setIsUpdatingStatus(true);
+    const newStatus = expense.status === 'P' ? 'Q' : 'P';
+    const successMessage = newStatus === 'Q' ? 'Despesa marcada como paga.' : 'Despesa marcada como pendente.';
+
+    try {
+        await updateExpense(String(expense.id), { status: newStatus });
+        toast({
+            title: 'Sucesso!',
+            description: successMessage,
+        });
+        onUpdate();
+    } catch (error) {
+         toast({
+            variant: 'destructive',
+            title: 'Uh oh! Algo deu errado.',
+            description: (error as Error).message || 'Não foi possível atualizar o status da despesa.',
+        });
+    } finally {
+        setIsUpdatingStatus(false);
+        setIsStatusAlertOpen(false);
+    }
+  }
+
   const currentStatus = statusConfig[expense.status] ?? { label: 'Desconhecido', className: 'bg-muted text-muted-foreground' };
 
   return (
-    <Card className={cn("flex flex-col justify-between h-full transition-shadow hover:shadow-md border-l-4 border-l-primary")}>
+    <Card className={cn("flex flex-col justify-between h-full transition-shadow hover:shadow-md border-l-4", {
+      'border-l-status-paid': expense.status === 'Q',
+      'border-l-primary': expense.status === 'P'
+    })}>
       <CardHeader>
         <div className="flex items-start justify-between gap-4">
             <div className="flex flex-col gap-2">
@@ -124,7 +152,7 @@ export function ExpenseCard({ expense, onUpdate }: ExpenseCardProps) {
             </div>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-grow">
             <div className="flex flex-col gap-4">
                 <div className="flex flex-col gap-2">
                     <div className="flex items-center space-x-2 text-sm text-muted-foreground">
@@ -142,6 +170,34 @@ export function ExpenseCard({ expense, onUpdate }: ExpenseCardProps) {
                 </div>
             </div>
       </CardContent>
+       <CardFooter className="pt-4">
+        <AlertDialog open={isStatusAlertOpen} onOpenChange={setIsStatusAlertOpen}>
+            <AlertDialogTrigger asChild>
+                 <Button 
+                    variant={expense.status === 'P' ? 'default' : 'outline'} 
+                    className="w-full"
+                    >
+                    {expense.status === 'P' ? <Check className="mr-2 h-4 w-4" /> : <X className="mr-2 h-4 w-4" />}
+                    {expense.status === 'P' ? 'Marcar como Paga' : 'Marcar como Pendente'}
+                </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Confirmar Alteração de Status</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        {`Tem certeza que deseja marcar a despesa "${expense.nome}" como ${expense.status === 'P' ? 'paga' : 'pendente'}?`}
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel disabled={isUpdatingStatus}>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleStatusChange} disabled={isUpdatingStatus}>
+                        {isUpdatingStatus && <Loader className="mr-2 h-4 w-4 animate-spin" />}
+                        Confirmar
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+      </CardFooter>
     </Card>
   );
 }
