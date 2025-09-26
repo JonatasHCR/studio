@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, type ReactNode, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { type Expense, type ExpenseStatus } from '../../lib/types';
 import { ExpenseCard } from './ExpenseCard';
@@ -17,7 +17,6 @@ import { format, isSameDay, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '../../lib/utils';
 import { getExpenses } from '../../lib/api';
-import { useToast } from '../../hooks/use-toast';
 
 
 type FilterField = 'nome' | 'tipo' | 'vencimento' | 'user_id' | 'status';
@@ -61,7 +60,6 @@ export function ExpenseDashboard() {
   const [itemsPerPage, setItemsPerPage] = useState(6);
   const [filterField, setFilterField] = useState<FilterField>('nome');
   const [filterValue, setFilterValue] = useState<string | Date | undefined>('');
-  const { toast } = useToast();
 
   const fetchAndSetExpenses = useCallback(async () => {
     setIsLoading(true);
@@ -71,15 +69,10 @@ export function ExpenseDashboard() {
     } catch (error) {
         console.error("Failed to fetch expenses:", error);
         setRawExpenses([]);
-        toast({
-            variant: 'destructive',
-            title: 'Erro ao buscar despesas',
-            description: (error as Error).message || 'Não foi possível conectar-se à API.',
-        });
     } finally {
         setIsLoading(false);
     }
-  }, [toast]);
+  }, []);
 
   useEffect(() => {
     fetchAndSetExpenses();
@@ -108,7 +101,7 @@ export function ExpenseDashboard() {
             case 'nome':
                 return e.nome.toLowerCase().startsWith((filterValue as string).toLowerCase());
             case 'user_id':
-                const userIdFilter = (e.userName || String(e.user_id)).toLowerCase();
+                const userIdFilter = String(e.user_id).toLowerCase();
                 return userIdFilter.startsWith((filterValue as string).toLowerCase());
             case 'tipo':
                  return filterValue === 'Todos' || e.tipo === filterValue;
@@ -235,7 +228,7 @@ export function ExpenseDashboard() {
                                 <SelectItem value="tipo">Tipo</SelectItem>
                                 <SelectItem value="status">Status</SelectItem>
                                 <SelectItem value="vencimento">Data de Vencimento</SelectItem>
-                                <SelectItem value="user_id">Criado Por</SelectItem>
+                                <SelectItem value="user_id">Criado Por (ID)</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -280,7 +273,7 @@ export function ExpenseDashboard() {
                         Nenhuma despesa encontrada
                     </p>
                     <p className="max-w-xs text-sm text-muted-foreground">
-                        Não há despesas com os filtros selecionados ou ocorreu um erro ao buscar os dados.
+                        Tente ajustar seus filtros ou cadastre uma nova despesa.
                     </p>
                 </div>
               )}

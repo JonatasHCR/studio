@@ -45,7 +45,9 @@ const expenseFormSchema = z.object({
   status: z.enum(['P', 'Q'], {
     required_error: 'O status é obrigatório.',
   }),
-  user_id: z.number().int(),
+  user_id: z.number().int().positive({
+    message: 'ID do usuário é inválido.'
+  }),
   userName: z.string().optional(),
 });
 
@@ -56,7 +58,7 @@ export function NewExpenseForm() {
   const { toast } = useToast();
   const [user, setUser] = useState<User | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [expenseTypes, setExpenseTypes] = useState<string[]>([]);
+  const [expenseTypes, setExpenseTypes] = useState<string[]>(['BOLETO', 'NOTA']);
   
   const form = useForm<ExpenseFormValues>({
     resolver: zodResolver(expenseFormSchema),
@@ -66,6 +68,7 @@ export function NewExpenseForm() {
       valor: '',
       user_id: 0,
       userName: '',
+      status: 'P',
     },
   });
 
@@ -87,7 +90,6 @@ export function NewExpenseForm() {
         ...data,
         valor: parseFloat(data.valor.replace(',', '.')),
         vencimento: data.vencimento.toISOString(),
-        user_id: Number(data.user_id)
       };
 
       await addExpense(expenseData);
@@ -268,3 +270,5 @@ export function NewExpenseForm() {
     </Card>
   );
 }
+
+    
