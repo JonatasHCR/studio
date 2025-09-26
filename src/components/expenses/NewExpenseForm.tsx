@@ -24,7 +24,7 @@ import { Calendar } from '../ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { addExpense, getExpenses } from '@/lib/api';
+import { addExpense } from '@/lib/api';
 import { type User } from '@/lib/types';
 import { Combobox } from '@/components/ui/combobox';
 
@@ -71,19 +71,6 @@ export function NewExpenseForm() {
       form.setValue('user_id', userData.id);
     }
   }, [form]);
-
-  useEffect(() => {
-    async function fetchExpenseTypes() {
-        try {
-            const expenses = await getExpenses();
-            const types = new Set(expenses.map(doc => doc.tipo as string));
-            setExpenseTypes(Array.from(types));
-        } catch (error) {
-            console.error("Failed to fetch expense types:", error);
-        }
-    }
-    fetchExpenseTypes();
-  }, []);
 
   async function onSubmit(data: ExpenseFormValues) {
     if (!user) return;

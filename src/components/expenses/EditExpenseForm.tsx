@@ -25,7 +25,7 @@ import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { type Expense } from '@/lib/types';
-import { updateExpense, getExpenses } from '@/lib/api';
+import { updateExpense } from '@/lib/api';
 import { Combobox } from '@/components/ui/combobox';
 
 
@@ -63,19 +63,6 @@ export function EditExpenseForm({ expense }: { expense: Expense }) {
       user_id: expense.user_id,
     },
   });
-  
-  useEffect(() => {
-    async function fetchExpenseTypes() {
-        try {
-            const expenses = await getExpenses();
-            const types = new Set(expenses.map(e => e.tipo as string));
-            setExpenseTypes(Array.from(types));
-        } catch (error) {
-            console.error("Failed to fetch expense types:", error);
-        }
-    }
-    fetchExpenseTypes();
-  }, []);
   
   async function onSubmit(data: ExpenseFormValues) {
     setIsSubmitting(true);
