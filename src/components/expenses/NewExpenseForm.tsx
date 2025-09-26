@@ -32,14 +32,14 @@ const expenseFormSchema = z.object({
   name: z.string().min(2, {
     message: 'O nome deve ter pelo menos 2 caracteres.',
   }),
-  amount: z.string().refine((val) => !isNaN(parseFloat(val)), {
+  amount: z.string().refine((val) => !isNaN(parseFloat(val.replace(',', '.'))), {
     message: 'O valor deve ser um número.',
   }),
   dueDate: z.date({
     required_error: 'A data de vencimento é obrigatória.',
   }),
   type: z.string().min(1, {
-    message: 'Selecione um tipo de despesa.',
+    message: 'Selecione ou crie um tipo de despesa.',
   }),
   createdBy: z.string().min(2, {
     message: 'O nome do criador deve ter pelo menos 2 caracteres.',
@@ -69,8 +69,13 @@ export function NewExpenseForm() {
   }, []);
 
   const comboboxOptions = useMemo(() => {
-    return expenseTypes.map(type => ({ value: type, label: type }));
-  }, [expenseTypes]);
+    const allTypes = new Set(expenseTypes);
+    const currentValue = form.watch('type');
+    if (currentValue && !allTypes.has(currentValue)) {
+      allTypes.add(currentValue);
+    }
+    return Array.from(allTypes).map(type => ({ value: type, label: type }));
+  }, [expenseTypes, form.watch('type')]);
 
   const form = useForm<ExpenseFormValues>({
     resolver: zodResolver(expenseFormSchema),
@@ -78,6 +83,7 @@ export function NewExpenseForm() {
       name: '',
       createdBy: 'Usuário Exemplo', // Default creator
       type: '',
+      amount: '',
     },
   });
 
@@ -89,6 +95,7 @@ export function NewExpenseForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             ...data,
+            amount: data.amount.replace(',', '.'),
             dueDate: data.dueDate.toISOString(),
         }),
       });
@@ -142,7 +149,7 @@ export function NewExpenseForm() {
                     <FormItem>
                     <FormLabel>Valor (R$)</FormLabel>
                     <FormControl>
-                        <Input type="number" step="0.01" placeholder="150.75" {...field} />
+                        <Input type="text" placeholder="150,75" {...field} />
                     </FormControl>
                     <FormMessage />
                     </FormItem>

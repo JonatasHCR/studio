@@ -29,6 +29,33 @@ interface ComboboxProps {
 
 export function Combobox({ options, value, onChange, placeholder, noResultsText}: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
+  const [inputValue, setInputValue] = React.useState(value || '')
+
+  React.useEffect(() => {
+    setInputValue(value || '');
+  }, [value]);
+
+  const handleSelect = (currentValue: string) => {
+    const newValue = currentValue === value ? "" : currentValue;
+    onChange(newValue);
+    setInputValue(newValue); 
+    setOpen(false);
+  }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setInputValue(newValue);
+    onChange(newValue);
+    if (!open) {
+      setOpen(true);
+    }
+  }
+
+  const handleInputBlur = () => {
+    // Ensure the final value is set on blur
+    onChange(inputValue);
+  };
+
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -40,14 +67,18 @@ export function Combobox({ options, value, onChange, placeholder, noResultsText}
           className="w-full justify-between"
         >
           {value
-            ? options.find((option) => option.value === value)?.label
+            ? options.find((option) => option.value.toLowerCase() === value.toLowerCase())?.label
             : placeholder || "Select option..."}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
         <Command shouldFilter={true}>
-          <CommandInput placeholder={placeholder || "Search..."} />
+            <CommandInput 
+                placeholder={placeholder || "Search..."} 
+                onValueChange={onChange}
+                value={value}
+            />
           <CommandList>
             <CommandEmpty>{noResultsText || "No results found."}</CommandEmpty>
             <CommandGroup>
@@ -63,7 +94,7 @@ export function Combobox({ options, value, onChange, placeholder, noResultsText}
                   <Check
                     className={cn(
                       "mr-2 h-4 w-4",
-                      value === option.value ? "opacity-100" : "opacity-0"
+                      value?.toLowerCase() === option.value.toLowerCase() ? "opacity-100" : "opacity-0"
                     )}
                   />
                   {option.label}
