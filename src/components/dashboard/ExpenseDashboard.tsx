@@ -2,21 +2,21 @@
 
 import { useState, useMemo, type ReactNode, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { type Expense, type ExpenseStatus } from '@/lib/types';
-import { ExpenseCard } from '@/components/dashboard/ExpenseCard';
+import { type Expense, type ExpenseStatus } from '../../lib/types';
+import { ExpenseCard } from './ExpenseCard';
 import { Ban, Loader, ChevronLeft, ChevronRight, Search, Filter, CalendarIcon } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
+import { Skeleton } from '../ui/skeleton';
+import { Card } from '../ui/card';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { Calendar } from '../ui/calendar';
 import { format, isSameDay, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
-import { getExpenses } from '@/lib/api';
+import { cn } from '../../lib/utils';
+import { getExpenses } from '../../lib/api';
 
 
 type FilterField = 'nome' | 'tipo' | 'vencimento' | 'user_id' | 'status';

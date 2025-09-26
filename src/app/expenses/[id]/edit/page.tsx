@@ -1,13 +1,13 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { EditExpenseForm } from '@/components/expenses/EditExpenseForm';
+import { EditExpenseForm } from '../../../../components/expenses/EditExpenseForm';
 import { Pencil } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '../../../../components/ui/skeleton';
+import { Card, CardContent } from '../../../../components/ui/card';
 import { useEffect, useState } from 'react';
-import { getExpenseById } from '@/lib/api';
-import { type Expense } from '@/lib/types';
+import { getExpenseById } from '../../../../lib/api';
+import { type Expense } from '../../../../lib/types';
 
 
 function EditExpensePageSkeleton() {

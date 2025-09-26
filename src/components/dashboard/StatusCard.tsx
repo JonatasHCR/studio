@@ -1,11 +1,11 @@
 'use client';
 
 import { type ReactNode, type MouseEvent } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
-import { type ExpenseStatus } from '@/lib/types';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { cn } from '../../lib/utils';
+import { type ExpenseStatus } from '../../lib/types';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
 
 interface StatusCardProps {
   title: string;

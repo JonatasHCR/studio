@@ -1,14 +1,14 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { type Expense, type ExpenseStatus } from '@/lib/types';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { Button } from '../ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '../ui/dropdown-menu';
+import { type Expense, type ExpenseStatus } from '../../lib/types';
 import { CalendarDays, MoreVertical, Pencil, User, Loader, Trash2, Tag } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
+import { cn } from '../../lib/utils';
+import { Badge } from '../ui/badge';
 import Link from 'next/link';
 import {
   AlertDialog,
@@ -20,10 +20,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+} from "../ui/alert-dialog"
 import { useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
-import { deleteExpense } from '@/lib/api';
+import { useToast } from '../../hooks/use-toast';
+import { deleteExpense } from '../../lib/api';
 
 interface ExpenseCardProps {
   expense: Expense;

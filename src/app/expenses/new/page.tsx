@@ -1,6 +1,6 @@
 'use client';
 
-import { NewExpenseForm } from '@/components/expenses/NewExpenseForm';
+import { NewExpenseForm } from '../../../components/expenses/NewExpenseForm';
 import { FilePlus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
