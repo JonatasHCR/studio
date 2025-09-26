@@ -1,6 +1,7 @@
 'use client';
     
 import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
 import { EditExpenseForm } from '@/components/expenses/EditExpenseForm';
 import { type Expense } from '@/lib/types';
 import { Pencil } from 'lucide-react';
@@ -54,8 +55,9 @@ function EditExpensePageSkeleton() {
 }
 
 
-export default function EditExpensePage({ params }: { params: { id: string } }) {
-  const { id } = params;
+export default function EditExpensePage() {
+  const params = useParams();
+  const id = params.id as string;
   const [expense, setExpense] = useState<Expense | null>(null);
   const [loading, setLoading] = useState(true);
 
