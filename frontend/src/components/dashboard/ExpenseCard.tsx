@@ -71,7 +71,7 @@ export function ExpenseCard({ expense, onUpdate }: ExpenseCardProps) {
     const successMessage = newStatus === 'Q' ? 'Despesa marcada como paga.' : 'Despesa marcada como pendente.';
 
     try {
-        await updateExpense(String(expense.id), { status: newStatus });
+        await updateExpense(String(expense.id), { ...expense, status: newStatus });
         toast({
             title: 'Sucesso!',
             description: successMessage,
@@ -153,7 +153,7 @@ export function ExpenseCard({ expense, onUpdate }: ExpenseCardProps) {
             </div>
         </div>
       </CardHeader>
-      <CardContent className="flex-grow">
+      <CardContent className="flex-grow pt-0">
             <div className="flex flex-col gap-4">
                 <div className="flex flex-col gap-2">
                     <div className="flex items-center space-x-2 text-sm text-muted-foreground">

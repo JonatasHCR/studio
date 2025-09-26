@@ -104,17 +104,13 @@ export const addExpense = async (data: Omit<Expense, 'id' | 'userName' | 'dynami
   });
 };
 
-export const updateExpense = async (id: string, data: Partial<Omit<Expense, 'id' | 'userName' | 'dynamicStatus'>>): Promise<Expense> => {
-    const payload: { [key: string]: any } = { ...data };
-    if (data.user_id) {
-        payload.user_id = Number(data.user_id);
-    }
-    if (data.valor) {
-        payload.valor = Number(data.valor);
-    }
-     if (data.vencimento) {
-        payload.vencimento = data.vencimento.split('T')[0]; // Format to YYYY-MM-DD
-    }
+export const updateExpense = async (id: string, data: Partial<Omit<Expense, 'id' | 'dynamicStatus'>>): Promise<Expense> => {
+    const payload = {
+        ...data,
+        user_id: Number(data.user_id),
+        valor: Number(data.valor),
+        vencimento: data.vencimento.split('T')[0], // Format to YYYY-MM-DD
+    };
   
     return fetchWrapper<Expense>(`/despesas/${id}`, {
       method: 'PUT',
