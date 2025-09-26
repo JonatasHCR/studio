@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { type Expense, type ExpenseStatus, type DynamicExpenseStatus } from '../../lib/types';
 import { ExpenseCard } from './ExpenseCard';
 import { StatusCard } from './StatusCard';
-import { Ban, Loader, ChevronLeft, ChevronRight, Search, Filter, CalendarIcon, Trophy, Hourglass, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Ban, Loader, ChevronLeft, ChevronRight, Search, Filter, CalendarIcon, Receipt, Hourglass, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
 import { Card } from '../ui/card';
 import { Button } from '../ui/button';
@@ -286,7 +286,7 @@ export function ExpenseDashboard() {
             />
             <StatusCard 
                 title="A vencer"
-                icon={<Trophy className="h-5 w-5" />}
+                icon={<Receipt className="h-5 w-5" />}
                 count={statusCounts.due}
                 status="due"
                 isSelected={selectedStatus === 'due'}
@@ -418,5 +418,3 @@ export function ExpenseDashboard() {
     </div>
   );
 }
-
-    
