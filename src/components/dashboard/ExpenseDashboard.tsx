@@ -122,9 +122,9 @@ export function ExpenseDashboard() {
 
         switch (filterField) {
             case 'name':
-                return e.name.toLowerCase().includes((filterValue as string).toLowerCase());
+                return e.name.toLowerCase().startsWith((filterValue as string).toLowerCase());
             case 'createdBy':
-                return e.createdBy.toLowerCase().includes((filterValue as string).toLowerCase());
+                return e.createdBy.toLowerCase().startsWith((filterValue as string).toLowerCase());
             case 'type':
                  return filterValue === 'Todos' || e.type === filterValue;
             case 'dueDate':

@@ -131,7 +131,12 @@ export function EditExpenseForm({ expense }: { expense: Expense }) {
                 <FormItem>
                   <FormLabel>Nome da Despesa</FormLabel>
                   <FormControl>
-                    <Input placeholder="Ex: Conta de Luz" {...field} />
+                    <Input
+                      placeholder="Ex: Conta de Luz"
+                      {...field}
+                      onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                      className="uppercase"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
