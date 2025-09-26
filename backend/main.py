@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
+from fastapi.middleware.cors import CORSMiddleware
+
 
 from app.core.database import engine, Base
 from app.api.version_1.endpoints.despesa import DespesaEndpoint
@@ -25,6 +27,21 @@ app = FastAPI(
     ],
     lifespan=lifespan,
 )
+
+origins = [
+    "http://localhost",
+    "http://localhost:9002",
+    "http://127.0.0.1:9002",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 app.include_router(UserEndpoint().router)
 app.include_router(DespesaEndpoint().router)
