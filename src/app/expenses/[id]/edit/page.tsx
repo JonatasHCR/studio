@@ -55,14 +55,17 @@ function EditExpensePageSkeleton() {
 
 
 export default function EditExpensePage({ params }: { params: { id: string } }) {
+  const { id } = params;
   const [expense, setExpense] = useState<Expense | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!id) return;
+    
     async function fetchExpense() {
       try {
         setLoading(true);
-        const response = await fetch(`/api/expenses/${params.id}`);
+        const response = await fetch(`/api/expenses/${id}`);
         if (!response.ok) {
           throw new Error('Failed to fetch expense');
         }
@@ -75,7 +78,7 @@ export default function EditExpensePage({ params }: { params: { id: string } }) 
       }
     }
     fetchExpense();
-  }, [params.id]);
+  }, [id]);
 
   if (loading) {
     return <EditExpensePageSkeleton />;
