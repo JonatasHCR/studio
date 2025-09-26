@@ -24,7 +24,7 @@ import { Calendar } from '../ui/calendar';
 import { cn } from '../../lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { addExpense } from '../../lib/api';
+import { addExpense, getExpenses } from '../../lib/api';
 import { type User } from '../../lib/types';
 import { Combobox } from '../ui/combobox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
@@ -58,7 +58,7 @@ export function NewExpenseForm() {
   const { toast } = useToast();
   const [user, setUser] = useState<User | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [expenseTypes, setExpenseTypes] = useState<string[]>(['BOLETO', 'NOTA']);
+  const [expenseTypes, setExpenseTypes] = useState<string[]>([]);
   
   const form = useForm<ExpenseFormValues>({
     resolver: zodResolver(expenseFormSchema),
@@ -81,6 +81,21 @@ export function NewExpenseForm() {
       form.setValue('userName', userData.nome);
     }
   }, [form]);
+  
+  useEffect(() => {
+    async function fetchExpenseTypes() {
+        try {
+            const expenses = await getExpenses();
+            const types = new Set(expenses.map(e => e.tipo));
+            setExpenseTypes(Array.from(types));
+        } catch (error) {
+            console.error("Failed to fetch expense types:", error);
+            // Set default types on error
+            setExpenseTypes(['BOLETO', 'NOTA']);
+        }
+    }
+    fetchExpenseTypes();
+  }, []);
 
   async function onSubmit(data: ExpenseFormValues) {
     if (!user) return;

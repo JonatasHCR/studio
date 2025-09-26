@@ -52,9 +52,29 @@ export const signIn = async (credentials: Pick<User, 'nome' | 'senha'>): Promise
   }
 };
 
+// --- Users API ---
+export const getUserById = async (id: number): Promise<User | null> => {
+    try {
+        return await fetchWrapper<User>(`/users/${id}`);
+    } catch (error) {
+        console.error(`Failed to fetch user ${id}:`, error);
+        return null;
+    }
+}
+
+
 // --- Expenses API ---
 export const getExpenses = async (): Promise<Expense[]> => {
-    return fetchWrapper<Expense[]>('/despesas/');
+    const expenses = await fetchWrapper<Expense[]>('/despesas/');
+    // Fetch user names for all expenses in parallel
+    const userPromises = expenses.map(async (expense) => {
+        if (expense.user_id) {
+            const user = await getUserById(expense.user_id);
+            expense.userName = user ? user.nome : `Usuário ${expense.user_id}`;
+        }
+        return expense;
+    });
+    return Promise.all(userPromises);
 };
 
 export const getExpenseById = async (id: string): Promise<Expense | null> => {

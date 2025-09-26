@@ -25,7 +25,7 @@ import { cn } from '../../lib/utils';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { type Expense, type ExpenseStatus } from '../../lib/types';
-import { updateExpense } from '../../lib/api';
+import { updateExpense, getExpenses } from '../../lib/api';
 import { Combobox } from '../ui/combobox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
@@ -54,6 +54,19 @@ export function EditExpenseForm({ expense }: { expense: Expense }) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [expenseTypes, setExpenseTypes] = useState<string[]>([]);
+
+  useEffect(() => {
+    async function fetchExpenseTypes() {
+        try {
+            const expenses = await getExpenses();
+            const types = new Set(expenses.map(e => e.tipo));
+            setExpenseTypes(Array.from(types));
+        } catch (error) {
+            console.error("Failed to fetch expense types:", error);
+        }
+    }
+    fetchExpenseTypes();
+  }, []);
 
   const form = useForm<ExpenseFormValues>({
     resolver: zodResolver(expenseFormSchema),
