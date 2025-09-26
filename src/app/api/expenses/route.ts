@@ -36,3 +36,22 @@ export async function GET(request: NextRequest) {
   
   return NextResponse.json(dynamicallyUpdatedExpenses);
 }
+
+export async function POST(request: NextRequest) {
+  try {
+    const newExpenseData = await request.json();
+    
+    const newExpense: Expense = {
+      id: (rawExpenses.length + 1).toString(),
+      status: 'due', // Default status for new expenses
+      ...newExpenseData,
+      amount: parseFloat(newExpenseData.amount),
+    };
+
+    rawExpenses.push(newExpense);
+
+    return NextResponse.json(newExpense, { status: 201 });
+  } catch (error) {
+    return NextResponse.json({ message: 'Erro ao criar despesa', error }, { status: 500 });
+  }
+}
