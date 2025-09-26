@@ -77,10 +77,13 @@ export function ExpenseDashboard() {
   const [filterField, setFilterField] = useState<FilterField>('nome');
   const [filterValue, setFilterValue] = useState<string | Date | undefined>('');
   const [selectedStatus, setSelectedStatus] = useState<DynamicExpenseStatus | 'all'>('all');
-  const [dueSoonDays, setDueSoonDays] = useState(7);
+  const [dueSoonDays, setDueSoonDays] = useState(5);
 
   const fetchAndSetExpenses = useCallback(async () => {
-    setIsLoading(true);
+    // Keep loading indicator only for the first load.
+    if (rawExpenses.length === 0) {
+      setIsLoading(true);
+    }
     try {
         const data = await getExpenses();
         setRawExpenses(data || []);
@@ -90,10 +93,16 @@ export function ExpenseDashboard() {
     } finally {
         setIsLoading(false);
     }
-  }, []);
+  }, [rawExpenses.length]);
 
   useEffect(() => {
     fetchAndSetExpenses();
+
+    const interval = setInterval(() => {
+        fetchAndSetExpenses();
+    }, 5000); // Poll every 5 seconds
+
+    return () => clearInterval(interval); // Cleanup interval on component unmount
   }, [fetchAndSetExpenses]);
 
   const expensesWithDynamicStatus = useMemo(() => {
@@ -141,7 +150,7 @@ export function ExpenseDashboard() {
     }
     
     return filtered.filter((e) => {
-        if (filterValue === undefined || filterValue === '') return true;
+        if (filterValue === undefined || filterValue === '' || filterValue === 'Todos') return true;
 
         switch (filterField) {
             case 'nome':
@@ -149,9 +158,9 @@ export function ExpenseDashboard() {
             case 'userName':
                 return e.userName?.toLowerCase().startsWith((filterValue as string).toLowerCase()) ?? false;
             case 'tipo':
-                 return filterValue === 'Todos' || e.tipo === filterValue;
+                 return e.tipo === filterValue;
             case 'status':
-                return filterValue === 'Todos' || e.status === filterValue;
+                return e.status === filterValue;
             case 'vencimento':
                 return filterValue instanceof Date && isSameDay(parseISO(e.vencimento), filterValue);
             default:
@@ -407,3 +416,5 @@ export function ExpenseDashboard() {
     </div>
   );
 }
+
+    
