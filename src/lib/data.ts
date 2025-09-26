@@ -10,7 +10,7 @@ export const expenses: Expense[] = [
     amount: 175.50, 
     dueDate: formatISO(subDays(today, 5)), 
     status: 'overdue',
-    type: 'Casa',
+    type: 'Boleto',
     createdBy: 'Usuário Exemplo'
   },
   { 
@@ -19,7 +19,7 @@ export const expenses: Expense[] = [
     amount: 99.99, 
     dueDate: formatISO(subDays(today, 2)), 
     status: 'overdue',
-    type: 'Casa',
+    type: 'Boleto',
     createdBy: 'Usuário Exemplo'
   },
   {
@@ -28,7 +28,7 @@ export const expenses: Expense[] = [
     amount: 1250.00,
     dueDate: formatISO(subDays(today, 1)),
     status: 'overdue',
-    type: 'Pessoal',
+    type: 'Boleto',
     createdBy: 'Usuário Exemplo'
   },
   { 
@@ -37,7 +37,7 @@ export const expenses: Expense[] = [
     amount: 80.00, 
     dueDate: formatISO(addDays(today, 2)), 
     status: 'due-soon',
-    type: 'Lazer',
+    type: 'Boleto',
     createdBy: 'Usuário Exemplo'
   },
   { 
@@ -46,7 +46,7 @@ export const expenses: Expense[] = [
     amount: 65.20, 
     dueDate: formatISO(addDays(today, 6)), 
     status: 'due-soon',
-    type: 'Casa',
+    type: 'Nota',
     createdBy: 'Usuário Exemplo'
   },
   { 
@@ -55,7 +55,7 @@ export const expenses: Expense[] = [
     amount: 2200.00, 
     dueDate: formatISO(addDays(today, 15)), 
     status: 'due',
-    type: 'Casa',
+    type: 'Boleto',
     createdBy: 'Usuário Exemplo'
   },
   { 
@@ -64,7 +64,7 @@ export const expenses: Expense[] = [
     amount: 350.00, 
     dueDate: formatISO(addDays(today, 25)), 
     status: 'due',
-    type: 'Transporte',
+    type: 'Boleto',
     createdBy: 'Usuário Exemplo'
   },
   {
@@ -73,7 +73,7 @@ export const expenses: Expense[] = [
     amount: 55.00,
     dueDate: formatISO(addDays(today, 20)),
     status: 'due',
-    type: 'Comunicação',
+    type: 'Nota',
     createdBy: 'Usuário Exemplo'
   },
   { 
@@ -82,7 +82,7 @@ export const expenses: Expense[] = [
     amount: 250.75, 
     dueDate: formatISO(subDays(today, 10)), 
     status: 'paid',
-    type: 'Casa',
+    type: 'Boleto',
     createdBy: 'Usuário Exemplo'
   },
   { 
@@ -91,7 +91,25 @@ export const expenses: Expense[] = [
     amount: 610.30, 
     dueDate: formatISO(subDays(today, 12)), 
     status: 'paid',
-    type: 'Alimentação',
+    type: 'Nota',
+    createdBy: 'Usuário Exemplo'
+  },
+  { 
+    id: '11', 
+    name: 'Manutenção do Carro', 
+    amount: 450.00, 
+    dueDate: formatISO(addDays(today, 8)), 
+    status: 'due',
+    type: 'Nota',
+    createdBy: 'Usuário Exemplo'
+  },
+  { 
+    id: '12', 
+    name: 'Netflix', 
+    amount: 39.90, 
+    dueDate: formatISO(addDays(today, 4)), 
+    status: 'due-soon',
+    type: 'Boleto',
     createdBy: 'Usuário Exemplo'
   },
 ];

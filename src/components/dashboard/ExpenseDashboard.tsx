@@ -5,11 +5,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { type Expense, type ExpenseStatus } from '@/lib/types';
 import { StatusCard } from '@/components/dashboard/StatusCard';
 import { ExpenseCard } from '@/components/dashboard/ExpenseCard';
-import { Hourglass, AlertTriangle, CheckCircle2, DollarSign, Ban, Loader, FileText } from 'lucide-react';
+import { Hourglass, AlertTriangle, CheckCircle2, DollarSign, Ban, Loader, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 
 const statusConfig: Record<ExpenseStatus, { title: string; icon: ReactNode }> = {
   due: { title: 'A Vencer', icon: <FileText className="h-8 w-8" /> },
@@ -62,6 +63,8 @@ export function ExpenseDashboard() {
   const [loading, setLoading] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState<ExpenseStatus>('due');
   const [dueSoonDays, setDueSoonDays] = useState(5);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(6);
 
   const fetchExpenses = useCallback(async (days: number) => {
     try {
@@ -91,6 +94,15 @@ export function ExpenseDashboard() {
   const filteredExpenses = useMemo(() => {
     return expenses.filter((e) => e.status === selectedStatus);
   }, [expenses, selectedStatus]);
+  
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedStatus, itemsPerPage]);
+
+  const totalPages = Math.ceil(filteredExpenses.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentExpenses = filteredExpenses.slice(indexOfFirstItem, indexOfLastItem);
 
   const totalAmount = useMemo(() => {
     return filteredExpenses.reduce((sum, expense) => sum + expense.amount, 0);
@@ -140,16 +152,16 @@ export function ExpenseDashboard() {
         <div className="p-6 pt-0">
           <AnimatePresence mode="wait">
             <motion.div
-              key={selectedStatus}
+              key={selectedStatus + currentPage + itemsPerPage}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
               className="min-h-[300px]"
             >
-              {filteredExpenses.length > 0 ? (
+              {currentExpenses.length > 0 ? (
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-                  {filteredExpenses.map((expense, index) => (
+                  {currentExpenses.map((expense, index) => (
                     <motion.div
                       key={expense.id}
                       initial={{ opacity: 0, scale: 0.95 }}
@@ -176,6 +188,47 @@ export function ExpenseDashboard() {
             </motion.div>
           </AnimatePresence>
         </div>
+        {filteredExpenses.length > 0 && (
+          <div className="flex items-center justify-between border-t p-4">
+            <div className="flex items-center gap-2">
+              <Label htmlFor="items-per-page" className="text-sm text-muted-foreground">Itens por página:</Label>
+              <Select value={String(itemsPerPage)} onValueChange={(value) => setItemsPerPage(Number(value))}>
+                <SelectTrigger id="items-per-page" className="h-8 w-20">
+                  <SelectValue placeholder="Select" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="3">3</SelectItem>
+                  <SelectItem value="6">6</SelectItem>
+                  <SelectItem value="9">9</SelectItem>
+                  <SelectItem value="12">12</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">
+                Página {currentPage} de {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
