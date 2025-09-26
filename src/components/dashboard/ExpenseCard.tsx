@@ -1,12 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { type Expense, type ExpenseStatus } from '@/lib/types';
 import { CalendarDays, DollarSign, MoreVertical, Pencil, Check, User, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import Link from 'next/link';
 
 const statusStyles: Record<ExpenseStatus, { text: string; border: string }> = {
     overdue: { text: 'text-status-overdue', border: 'border-l-status-overdue' },
@@ -40,9 +41,11 @@ export function ExpenseCard({ expense }: { expense: Expense }) {
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href={`/expenses/${expense.id}/edit`}>
                             <Pencil className="mr-2 h-4 w-4" />
                             Editar
+                          </Link>
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
