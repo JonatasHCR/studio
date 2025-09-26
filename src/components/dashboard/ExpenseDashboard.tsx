@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, type ReactNode, useEffect, useCallback } from 'react';
+import { useState, useMemo, type ReactNode, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { type Expense, type ExpenseStatus } from '@/lib/types';
 import { StatusCard } from '@/components/dashboard/StatusCard';
@@ -14,9 +14,12 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { format, isSameDay, parseISO } from 'date-fns';
+import { format, isSameDay, parseISO, startOfDay, isBefore, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { useCollection } from '@/firebase/firestore/use-collection';
+import { collection, query, Timestamp } from 'firebase/firestore';
+import { useFirebase } from '@/firebase';
 
 const statusConfig: Record<ExpenseStatus, { title: string; icon: ReactNode }> = {
   due: { title: 'A Vencer', icon: <FileText className="h-8 w-8" /> },
@@ -65,10 +68,33 @@ function CardSkeleton() {
       </div>
     )
   }
+  
+function getDynamicStatus(dueDate: Date, status: ExpenseStatus, dueSoonDays: number): ExpenseStatus {
+    if (status === 'paid') {
+      return 'paid';
+    }
+    const today = startOfDay(new Date());
+    const due = startOfDay(dueDate);
+  
+    if (isBefore(due, today)) {
+      return 'overdue';
+    }
+  
+    const daysUntilDue = differenceInDays(due, today);
+  
+    if (daysUntilDue <= dueSoonDays) {
+      return 'due-soon';
+    }
+  
+    return 'due';
+}
+
 
 export function ExpenseDashboard() {
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { firestore } = useFirebase();
+  const expensesQuery = firestore ? query(collection(firestore, 'expenses')) : null;
+  const { data: rawExpenses = [], isLoading } = useCollection<Expense>(expensesQuery);
+  
   const [selectedStatus, setSelectedStatus] = useState<ExpenseStatus>('due');
   const [dueSoonDays, setDueSoonDays] = useState(5);
   const [currentPage, setCurrentPage] = useState(1);
@@ -76,26 +102,17 @@ export function ExpenseDashboard() {
   const [filterField, setFilterField] = useState<FilterField>('name');
   const [filterValue, setFilterValue] = useState<string | Date | undefined>('');
 
-  const fetchExpenses = useCallback(async (days: number) => {
-    try {
-      setLoading(true);
-      const response = await fetch(`/api/expenses?dueSoonDays=${days}`);
-      const data = await response.json();
-      setExpenses(data);
-    } catch (error) {
-      console.error("Failed to fetch expenses:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchExpenses(dueSoonDays);
-  }, [fetchExpenses, dueSoonDays]);
-  
-  const handleStatusChange = () => {
-    fetchExpenses(dueSoonDays);
-  };
+  const expenses = useMemo(() => {
+    return rawExpenses.map(expense => {
+        // Firestore timestamp to JS Date
+        const dueDate = (expense.dueDate as unknown as Timestamp).toDate();
+        return {
+            ...expense,
+            dueDate: dueDate.toISOString(), // Keep it as ISO string for consistency
+            status: getDynamicStatus(dueDate, expense.status, dueSoonDays)
+        }
+    });
+  }, [rawExpenses, dueSoonDays]);
 
   const expenseTypes = useMemo(() => {
     const types = new Set(expenses.map(e => e.type));
@@ -206,7 +223,7 @@ export function ExpenseDashboard() {
     }
   }
 
-  if (loading && expenses.length === 0) {
+  if (isLoading && expenses.length === 0) {
     return <DashboardSkeleton />;
   }
 
@@ -229,7 +246,7 @@ export function ExpenseDashboard() {
       </div>
 
       <div className="rounded-xl border bg-card text-card-foreground shadow-sm relative">
-        {loading && (
+        {isLoading && rawExpenses.length > 0 && (
           <div className="absolute inset-0 bg-background/50 flex items-center justify-center z-10">
             <Loader className="h-8 w-8 animate-spin text-primary" />
           </div>
@@ -282,7 +299,7 @@ export function ExpenseDashboard() {
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: index * 0.05 }}
                     >
-                      <ExpenseCard expense={expense} onStatusChange={handleStatusChange} />
+                      <ExpenseCard expense={expense} />
                     </motion.div>
                   ))}
                 </div>

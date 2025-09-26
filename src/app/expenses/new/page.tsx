@@ -2,22 +2,20 @@
 
 import { NewExpenseForm } from '@/components/expenses/NewExpenseForm';
 import { FilePlus } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useAuth } from '@/firebase/auth/use-auth';
 
 export default function NewExpensePage() {
-  const { user, loading } = useAuth();
+  const { user, isLoading } = useAuth();
   const router = useRouter();
 
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login');
-    }
-  }, [user, loading, router]);
-
-  if (loading || !user) {
+  if (isLoading) {
     return null; // ou um componente de loading
+  }
+
+  if (!user && !isLoading) {
+    router.push('/login');
+    return null;
   }
 
   return (

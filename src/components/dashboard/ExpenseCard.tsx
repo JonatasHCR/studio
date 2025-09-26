@@ -23,6 +23,8 @@ import {
 } from "@/components/ui/alert-dialog"
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { useFirebase } from '@/firebase';
 
 
 const statusStyles: Record<ExpenseStatus, { text: string; border: string }> = {
@@ -34,10 +36,9 @@ const statusStyles: Record<ExpenseStatus, { text: string; border: string }> = {
 
 interface ExpenseCardProps {
   expense: Expense;
-  onStatusChange: () => void;
 }
 
-export function ExpenseCard({ expense, onStatusChange }: ExpenseCardProps) {
+export function ExpenseCard({ expense }: ExpenseCardProps) {
   const dueDate = new Date(expense.dueDate);
   const styles = statusStyles[expense.status];
   const { toast } = useToast();
@@ -45,26 +46,19 @@ export function ExpenseCard({ expense, onStatusChange }: ExpenseCardProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isStatusAlertOpen, setIsStatusAlertOpen] = useState(false);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
+  const { firestore } = useFirebase();
 
   const handleStatusChange = async (newStatus: ExpenseStatus) => {
+    if (!firestore) return;
     setIsUpdating(true);
     try {
-      const response = await fetch(`/api/expenses/${expense.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Falha ao atualizar o status da despesa');
-      }
+      const expenseRef = doc(firestore, 'expenses', expense.id);
+      await updateDoc(expenseRef, { status: newStatus });
       
       toast({
         title: 'Sucesso!',
         description: `Despesa marcada como ${newStatus === 'paid' ? 'paga' : 'não paga'}.`,
       });
-
-      onStatusChange(); // Re-fetch expenses
     } catch (error) {
        toast({
         variant: 'destructive',
@@ -78,22 +72,16 @@ export function ExpenseCard({ expense, onStatusChange }: ExpenseCardProps) {
   };
 
   const handleDelete = async () => {
+    if (!firestore) return;
     setIsDeleting(true);
     try {
-        const response = await fetch(`/api/expenses/${expense.id}`, {
-            method: 'DELETE',
-        });
+      const expenseRef = doc(firestore, 'expenses', expense.id);
+      await deleteDoc(expenseRef);
 
-        if (!response.ok) {
-            throw new Error('Falha ao excluir a despesa');
-        }
-
-        toast({
-            title: 'Sucesso!',
-            description: 'A despesa foi excluída.',
-        });
-
-        onStatusChange(); // Re-fetch expenses
+      toast({
+          title: 'Sucesso!',
+          description: 'A despesa foi excluída.',
+      });
     } catch (error) {
         toast({
             variant: 'destructive',

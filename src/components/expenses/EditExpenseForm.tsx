@@ -22,10 +22,12 @@ import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { CalendarIcon } from 'lucide-react';
 import { Calendar } from '../ui/calendar';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Combobox } from '../ui/combobox';
 import { type Expense } from '@/lib/types';
+import { useFirebase } from '@/firebase';
+import { doc, updateDoc, collection, getDocs, Timestamp, serverTimestamp } from 'firebase/firestore';
 
 
 const expenseFormSchema = z.object({
@@ -53,13 +55,14 @@ export function EditExpenseForm({ expense }: { expense: Expense }) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [expenseTypes, setExpenseTypes] = useState<string[]>([]);
+  const { firestore } = useFirebase();
 
   const form = useForm<ExpenseFormValues>({
     resolver: zodResolver(expenseFormSchema),
     defaultValues: {
       name: expense.name,
       amount: expense.amount.toString().replace('.', ','),
-      dueDate: new Date(expense.dueDate),
+      dueDate: parseISO(expense.dueDate),
       type: expense.type,
       createdBy: expense.createdBy,
     },
@@ -67,38 +70,33 @@ export function EditExpenseForm({ expense }: { expense: Expense }) {
   
   useEffect(() => {
     async function fetchExpenseTypes() {
+        if (!firestore) return;
         try {
-            const response = await fetch('/api/expenses');
-            const expenses: Expense[] = await response.json();
-            const types = new Set(expenses.map(e => e.type));
+            const querySnapshot = await getDocs(collection(firestore, "expenses"));
+            const types = new Set(querySnapshot.docs.map(doc => doc.data().type as string));
             setExpenseTypes(Array.from(types));
         } catch (error) {
             console.error("Failed to fetch expense types:", error);
         }
     }
     fetchExpenseTypes();
-  }, []);
+  }, [firestore]);
   
   const comboboxOptions = useMemo(() => {
     return expenseTypes.map(type => ({ value: type, label: type }));
   }, [expenseTypes]);
 
   async function onSubmit(data: ExpenseFormValues) {
+    if (!firestore) return;
     setIsSubmitting(true);
     try {
-      const response = await fetch(`/api/expenses/${expense.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            ...data,
-            amount: data.amount.replace(',', '.'),
-            dueDate: data.dueDate.toISOString(),
-        }),
+      const expenseRef = doc(firestore, 'expenses', expense.id);
+      await updateDoc(expenseRef, {
+        ...data,
+        amount: parseFloat(data.amount.replace(',', '.')),
+        dueDate: Timestamp.fromDate(data.dueDate),
+        updatedAt: serverTimestamp(),
       });
-
-      if (!response.ok) {
-        throw new Error('Falha ao atualizar despesa');
-      }
 
       toast({
         title: 'Sucesso!',

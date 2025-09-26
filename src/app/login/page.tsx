@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,26 +8,29 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useToast } from '@/hooks/use-toast';
 import { Loader, LogIn } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { useFirebase } from '@/firebase';
 
 export default function LoginPage() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('adm@example.com');
+  const [password, setPassword] = useState('123123');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { login } = useAuth();
+  const { auth } = useFirebase();
   const { toast } = useToast();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!auth) return;
     setIsSubmitting(true);
     try {
-      await login(username, password);
+      await signInWithEmailAndPassword(auth, email, password);
       router.push('/');
     } catch (error) {
       toast({
         variant: 'destructive',
         title: 'Falha no Login',
-        description: (error as Error).message,
+        description: (error as Error).message || "Verifique suas credenciais.",
       });
       setIsSubmitting(false);
     }
@@ -43,17 +45,17 @@ export default function LoginPage() {
               <LogIn className="h-8 w-8" />
             </div>
             <CardTitle className="font-headline text-2xl">Acessar Painel</CardTitle>
-            <CardDescription>Use suas credenciais para entrar.</CardDescription>
+            <CardDescription>Use seu e-mail e senha para entrar. (adm@example.com / 123123)</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username">Nome de Usuário</Label>
+              <Label htmlFor="email">E-mail</Label>
               <Input
-                id="username"
-                type="text"
-                placeholder="adm"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                id="email"
+                type="email"
+                placeholder="adm@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={isSubmitting}
               />

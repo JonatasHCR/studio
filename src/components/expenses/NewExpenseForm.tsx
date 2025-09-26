@@ -25,8 +25,9 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Combobox } from '../ui/combobox';
-import { type Expense } from '@/lib/types';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/firebase/auth/use-auth';
+import { useFirebase } from '@/firebase';
+import { addDoc, collection, getDocs, Timestamp, serverTimestamp } from 'firebase/firestore';
 
 
 const expenseFormSchema = z.object({
@@ -55,6 +56,7 @@ export function NewExpenseForm() {
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [expenseTypes, setExpenseTypes] = useState<string[]>([]);
+  const { firestore } = useFirebase();
   
   const form = useForm<ExpenseFormValues>({
     resolver: zodResolver(expenseFormSchema),
@@ -68,23 +70,23 @@ export function NewExpenseForm() {
 
   useEffect(() => {
     if (user) {
-      form.setValue('createdBy', user.username);
+      form.setValue('createdBy', user.displayName || user.email || 'Usuário');
     }
   }, [user, form]);
 
   useEffect(() => {
     async function fetchExpenseTypes() {
+        if (!firestore) return;
         try {
-            const response = await fetch('/api/expenses');
-            const expenses: Expense[] = await response.json();
-            const types = new Set(expenses.map(e => e.type));
+            const querySnapshot = await getDocs(collection(firestore, "expenses"));
+            const types = new Set(querySnapshot.docs.map(doc => doc.data().type as string));
             setExpenseTypes(Array.from(types));
         } catch (error) {
             console.error("Failed to fetch expense types:", error);
         }
     }
     fetchExpenseTypes();
-  }, []);
+  }, [firestore]);
 
   const comboboxOptions = useMemo(() => {
     return expenseTypes.map(type => ({ value: type, label: type }));
@@ -93,21 +95,17 @@ export function NewExpenseForm() {
 
 
   async function onSubmit(data: ExpenseFormValues) {
+    if (!firestore) return;
     setIsSubmitting(true);
     try {
-      const response = await fetch('/api/expenses', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            ...data,
-            amount: data.amount.replace(',', '.'),
-            dueDate: data.dueDate.toISOString(),
-        }),
+      await addDoc(collection(firestore, 'expenses'), {
+        ...data,
+        amount: parseFloat(data.amount.replace(',', '.')),
+        dueDate: Timestamp.fromDate(data.dueDate),
+        status: 'due',
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
       });
-
-      if (!response.ok) {
-        throw new Error('Falha ao criar despesa');
-      }
 
       toast({
         title: 'Sucesso!',

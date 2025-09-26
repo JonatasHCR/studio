@@ -1,13 +1,14 @@
 'use client';
-    
-import { useEffect, useState } from 'react';
+
 import { useParams, useRouter } from 'next/navigation';
 import { EditExpenseForm } from '@/components/expenses/EditExpenseForm';
-import { type Expense } from '@/lib/types';
+import { useDoc } from '@/firebase/firestore/use-doc';
 import { Pencil } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/firebase/auth/use-auth';
+import { doc } from 'firebase/firestore';
+import { useFirebase } from '@/firebase';
 
 function EditExpensePageSkeleton() {
     return (
@@ -59,47 +60,27 @@ function EditExpensePageSkeleton() {
 export default function EditExpensePage() {
   const params = useParams();
   const id = params.id as string;
-  const [expense, setExpense] = useState<Expense | null>(null);
-  const [loading, setLoading] = useState(true);
-  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
-
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push('/login');
-    }
-  }, [user, authLoading, router]);
-
-  useEffect(() => {
-    if (!id || !user) return;
-    
-    async function fetchExpense() {
-      try {
-        setLoading(true);
-        const response = await fetch(`/api/expenses/${id}`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch expense');
-        }
-        const data = await response.json();
-        setExpense(data);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchExpense();
-  }, [id, user]);
+  const { firestore } = useFirebase();
   
-  if (authLoading || loading) {
+  const expenseRef = id && firestore ? doc(firestore, 'expenses', id) : null;
+  const { data: expense, isLoading: expenseLoading } = useDoc(expenseRef);
+  const { user, isLoading: authLoading } = useAuth();
+
+  if (authLoading) {
     return <EditExpensePageSkeleton />;
   }
-  
+
   if (!user) {
+    router.push('/login');
     return null;
   }
+  
+  if (expenseLoading) {
+    return <EditExpensePageSkeleton />;
+  }
 
-  if (!expense) {
+  if (!expense && !expenseLoading) {
     return (
         <div className="min-h-screen bg-background flex items-center justify-center">
             <div className="text-center">
@@ -128,7 +109,7 @@ export default function EditExpensePage() {
             </div>
           </div>
         </header>
-        <EditExpenseForm expense={expense} />
+        {expense && <EditExpenseForm expense={expense} />}
       </div>
     </div>
   );

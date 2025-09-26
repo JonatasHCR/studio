@@ -4,23 +4,58 @@ import { ExpenseDashboard } from '@/components/dashboard/ExpenseDashboard';
 import { Button } from '@/components/ui/button';
 import { FileSpreadsheet, PlusCircle, LogOut } from 'lucide-react';
 import Link from 'next/link';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/firebase/auth/use-auth';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useFirebase } from '@/firebase';
+import { signOut as firebaseSignOut } from 'firebase/auth';
+
+function HomePageSkeleton() {
+    return (
+        <main className="min-h-screen bg-background">
+            <div className="container mx-auto p-4 sm:p-6 lg:p-8">
+                <header className="mb-8">
+                    <div className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                            <Skeleton className="h-14 w-14 rounded-2xl" />
+                            <div>
+                                <Skeleton className="h-10 w-64" />
+                                <Skeleton className="mt-2 h-6 w-80" />
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <Skeleton className="h-10 w-36" />
+                            <Skeleton className="h-10 w-24" />
+                        </div>
+                    </div>
+                </header>
+                <Skeleton className="h-[500px] w-full" />
+            </div>
+        </main>
+    )
+}
 
 export default function Home() {
-  const { user, logout } = useAuth();
+  const { user, isLoading } = useAuth();
+  const { auth } = useFirebase();
   const router = useRouter();
 
-  useEffect(() => {
-    if (user === null) {
+  const handleSignOut = async () => {
+    if(auth) {
+      await firebaseSignOut(auth);
       router.push('/login');
     }
-  }, [user, router]);
-
-  if (!user) {
-    return null; // ou um componente de loading
   }
+
+  if (isLoading) {
+    return <HomePageSkeleton />;
+  }
+
+  if (!user && !isLoading) {
+    router.push('/login');
+    return null; 
+  }
+
 
   return (
     <main className="min-h-screen bg-background">
@@ -47,7 +82,7 @@ export default function Home() {
                             Nova Despesa
                         </Button>
                     </Link>
-                    <Button variant="outline" onClick={logout}>
+                    <Button variant="outline" onClick={handleSignOut}>
                         <LogOut className="mr-2 h-4 w-4" />
                         Sair
                     </Button>
