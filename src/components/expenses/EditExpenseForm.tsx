@@ -80,13 +80,8 @@ export function EditExpenseForm({ expense }: { expense: Expense }) {
   }, []);
   
   const comboboxOptions = useMemo(() => {
-    const allTypes = new Set(expenseTypes);
-    const currentValue = form.watch('type');
-    if (currentValue && !allTypes.has(currentValue)) {
-      allTypes.add(currentValue);
-    }
-    return Array.from(allTypes).map(type => ({ value: type, label: type }));
-  }, [expenseTypes, form]);
+    return expenseTypes.map(type => ({ value: type, label: type }));
+  }, [expenseTypes]);
 
   async function onSubmit(data: ExpenseFormValues) {
     setIsSubmitting(true);

@@ -29,60 +29,49 @@ interface ComboboxProps {
 
 export function Combobox({ options, value, onChange, placeholder, noResultsText}: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
-  const [inputValue, setInputValue] = React.useState(value || '')
-
-  React.useEffect(() => {
-    setInputValue(value || '');
-  }, [value]);
-
-  const handleSelect = (currentValue: string) => {
-    const newValue = currentValue === value ? "" : currentValue;
-    onChange(newValue);
-    setInputValue(newValue); 
-    setOpen(false);
-  }
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    setInputValue(newValue);
-    onChange(newValue);
-    if (!open) {
-      setOpen(true);
-    }
-  }
-
-  const handleInputBlur = () => {
-    // Ensure the final value is set on blur
-    onChange(inputValue);
-  };
-
+  
+  const filteredOptions = options.filter(option => 
+    option.label.toLowerCase().includes((value || '').toLowerCase())
+  );
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          className="w-full justify-between"
-        >
-          {value
-            ? options.find((option) => option.value.toLowerCase() === value.toLowerCase())?.label
-            : placeholder || "Select option..."}
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-        </Button>
+         <div className="relative">
+            <Command>
+              <CommandInput 
+                placeholder={placeholder || "Search..."} 
+                value={value}
+                onValueChange={onChange}
+                onFocus={() => setOpen(true)}
+                className="w-full justify-between"
+              />
+            </Command>
+            <ChevronsUpDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 shrink-0 opacity-50" />
+        </div>
       </PopoverTrigger>
       <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-        <Command shouldFilter={false}>
-            <CommandInput 
-                placeholder={placeholder || "Search..."} 
-                onValueChange={onChange}
-                value={value}
-            />
           <CommandList>
+            {filteredOptions.length === 0 && (value || "").length > 0 && (
+                <CommandItem
+                    value={value}
+                    onSelect={(currentValue) => {
+                        onChange(currentValue === value ? "" : currentValue)
+                        setOpen(false)
+                    }}
+                >
+                    <Check
+                        className={cn(
+                        "mr-2 h-4 w-4",
+                        "opacity-0"
+                        )}
+                    />
+                    Criar "{value}"
+                </CommandItem>
+            )}
             <CommandEmpty>{noResultsText || "No results found."}</CommandEmpty>
             <CommandGroup>
-              {options.map((option) => (
+              {filteredOptions.map((option) => (
                 <CommandItem
                   key={option.value}
                   value={option.value}
@@ -102,7 +91,6 @@ export function Combobox({ options, value, onChange, placeholder, noResultsText}
               ))}
             </CommandGroup>
           </CommandList>
-        </Command>
       </PopoverContent>
     </Popover>
   )
