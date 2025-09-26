@@ -4,7 +4,7 @@ import { type Expense } from '@/lib/types';
 import {differenceInDays, isBefore, parseISO, startOfDay} from "date-fns";
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
-  const { id } = params;
+  const id = params.id;
   const expense = expenses.find((e) => e.id === id);
 
   if (!expense) {
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
     try {
-        const { id } = params;
+        const id = params.id;
         const updatedExpenseData = await request.json();
 
         const expenseIndex = expenses.findIndex((e) => e.id === id);
@@ -63,7 +63,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
     try {
-        const { id } = params;
+        const id = params.id;
         const expenseIndex = expenses.findIndex((e) => e.id === id);
 
         if (expenseIndex === -1) {
