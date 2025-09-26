@@ -40,8 +40,6 @@ async function fetchWrapper<T>(endpoint: string, options?: RequestInit): Promise
 
 
 // --- Auth API ---
-// This is a workaround. A real sign-in would validate a password.
-// Here, we just fetch the user by username.
 export const signIn = async (credentials: Pick<User, 'nome' | 'senha'>): Promise<User | null> => {
   try {
     // The backend doesn't have a password check, so we just get the user by username.
@@ -81,7 +79,7 @@ export const addExpense = async (data: Omit<Expense, 'id' | 'userName' | 'dynami
         ...data,
         user_id: Number(data.user_id),
         valor: Number(data.valor),
-        vencimento: data.vencimento, // Already in ISO string format
+        vencimento: data.vencimento.split('T')[0], // Format to YYYY-MM-DD
     }),
   });
 };
@@ -95,7 +93,7 @@ export const updateExpense = async (id: string, data: Partial<Omit<Expense, 'id'
         payload.valor = Number(data.valor);
     }
      if (data.vencimento) {
-        payload.vencimento = data.vencimento; // Already in ISO string format
+        payload.vencimento = data.vencimento.split('T')[0]; // Format to YYYY-MM-DD
     }
   
     return fetchWrapper<Expense>(`/despesas/${id}`, {
