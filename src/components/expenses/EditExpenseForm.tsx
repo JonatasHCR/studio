@@ -64,7 +64,7 @@ export function EditExpenseForm({ expense }: { expense: Expense }) {
       createdBy: expense.createdBy,
     },
   });
-
+  
   useEffect(() => {
     async function fetchExpenseTypes() {
         try {
