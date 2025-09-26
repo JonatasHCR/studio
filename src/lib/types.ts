@@ -7,6 +7,7 @@ export interface Expense {
   tipo: string;
   valor: number;
   vencimento: string; // ISO string
+  status: ExpenseStatus;
   user_id: number;
   userName?: string;
 }

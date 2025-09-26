@@ -3,8 +3,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { type Expense } from '@/lib/types';
-import { CalendarDays, MoreVertical, Pencil, User, Loader, Trash2 } from 'lucide-react';
+import { type Expense, type ExpenseStatus } from '@/lib/types';
+import { CalendarDays, MoreVertical, Pencil, User, Loader, Trash2, Tag } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -29,6 +29,14 @@ interface ExpenseCardProps {
   expense: Expense;
   onUpdate: () => void;
 }
+
+const statusConfig: Record<ExpenseStatus, { label: string; className: string }> = {
+    due: { label: 'A Vencer', className: 'bg-status-due/20 text-status-due-foreground' },
+    'due-soon': { label: 'Vence em Breve', className: 'bg-status-due-soon/20 text-status-due-soon-foreground' },
+    overdue: { label: 'Vencida', className: 'bg-status-overdue/20 text-status-overdue-foreground' },
+    paid: { label: 'Paga', className: 'bg-status-paid/20 text-status-paid-foreground' },
+};
+
 
 export function ExpenseCard({ expense, onUpdate }: ExpenseCardProps) {
   const dueDate = parseISO(expense.vencimento);
@@ -57,6 +65,7 @@ export function ExpenseCard({ expense, onUpdate }: ExpenseCardProps) {
     }
   };
 
+  const currentStatus = statusConfig[expense.status] ?? { label: 'Desconhecido', className: 'bg-muted text-muted-foreground' };
 
   return (
     <Card className={cn("flex flex-col justify-between h-full transition-shadow hover:shadow-md border-l-4 border-l-primary")}>
@@ -64,7 +73,10 @@ export function ExpenseCard({ expense, onUpdate }: ExpenseCardProps) {
         <div className="flex items-start justify-between gap-4">
             <div className="flex flex-col gap-2">
                 <CardTitle className="font-headline text-lg font-semibold">{expense.nome}</CardTitle>
-                <Badge variant="secondary" className="w-fit">{expense.tipo}</Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className="w-fit">{expense.tipo}</Badge>
+                  <Badge variant="outline" className={cn("w-fit", currentStatus.className)}>{currentStatus.label}</Badge>
+                </div>
             </div>
             <div className="flex items-center gap-1">
                 <div className={cn("flex items-center gap-1.5 text-lg font-bold")}>

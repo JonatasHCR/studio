@@ -35,7 +35,12 @@ export const signIn = async (credentials: Pick<User, 'email' | 'senha'>): Promis
 
 // --- Expenses API ---
 export const getExpenses = async (): Promise<Expense[]> => {
-  return fetchWrapper<Expense[]>('/despesas');
+  try {
+    return await fetchWrapper<Expense[]>('/despesas');
+  } catch (error) {
+    console.error("Failed to fetch expenses:", error);
+    return [];
+  }
 };
 
 export const getExpenseById = async (id: string): Promise<Expense | null> => {

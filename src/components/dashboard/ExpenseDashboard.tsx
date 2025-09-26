@@ -2,7 +2,7 @@
 
 import { useState, useMemo, type ReactNode, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { type Expense } from '@/lib/types';
+import { type Expense, type ExpenseStatus } from '@/lib/types';
 import { ExpenseCard } from '@/components/dashboard/ExpenseCard';
 import { Ban, Loader, ChevronLeft, ChevronRight, Search, Filter, CalendarIcon } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -19,7 +19,7 @@ import { cn } from '@/lib/utils';
 import { getExpenses } from '@/lib/api';
 
 
-type FilterField = 'nome' | 'tipo' | 'vencimento' | 'user_id';
+type FilterField = 'nome' | 'tipo' | 'vencimento' | 'user_id' | 'status';
 
 function DashboardSkeleton() {
     return (
@@ -82,6 +82,14 @@ export function ExpenseDashboard() {
     const types = new Set(rawExpenses.map(e => e.tipo));
     return ['Todos', ...Array.from(types)];
   }, [rawExpenses]);
+
+  const expenseStatuses: { value: ExpenseStatus | 'Todos', label: string }[] = [
+    { value: 'Todos', label: 'Todos' },
+    { value: 'paid', label: 'Paga' },
+    { value: 'overdue', label: 'Vencida' },
+    { value: 'due-soon', label: 'Vence em Breve' },
+    { value: 'due', label: 'A Vencer' },
+  ];
   
   useEffect(() => {
     setFilterValue('');
@@ -99,6 +107,8 @@ export function ExpenseDashboard() {
                 return userIdFilter.startsWith((filterValue as string).toLowerCase());
             case 'tipo':
                  return filterValue === 'Todos' || e.tipo === filterValue;
+            case 'status':
+                return filterValue === 'Todos' || e.status === filterValue;
             case 'vencimento':
                 return isSameDay(parseISO(e.vencimento), filterValue as Date);
             default:
@@ -160,6 +170,19 @@ export function ExpenseDashboard() {
                     </SelectContent>
                 </Select>
             );
+        case 'status':
+            return (
+                <Select value={filterValue as string || 'Todos'} onValueChange={(value) => setFilterValue(value)}>
+                    <SelectTrigger className="w-full sm:w-64">
+                        <SelectValue placeholder="Filtrar por status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {expenseStatuses.map((status) => (
+                            <SelectItem key={status.value} value={status.value}>{status.label}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            );
         case 'nome':
         case 'user_id':
         default:
@@ -205,6 +228,7 @@ export function ExpenseDashboard() {
                             <SelectContent>
                                 <SelectItem value="nome">Nome da Despesa</SelectItem>
                                 <SelectItem value="tipo">Tipo</SelectItem>
+                                <SelectItem value="status">Status</SelectItem>
                                 <SelectItem value="vencimento">Data de Vencimento</SelectItem>
                                 <SelectItem value="user_id">Criado Por</SelectItem>
                             </SelectContent>

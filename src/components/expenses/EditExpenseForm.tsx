@@ -17,17 +17,17 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Loader } from 'lucide-react';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { CalendarIcon } from 'lucide-react';
 import { Calendar } from '../ui/calendar';
 import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { type Expense } from '@/lib/types';
+import { type Expense, type ExpenseStatus } from '@/lib/types';
 import { updateExpense } from '@/lib/api';
 import { Combobox } from '@/components/ui/combobox';
-
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const expenseFormSchema = z.object({
   nome: z.string().min(2, {
@@ -42,6 +42,7 @@ const expenseFormSchema = z.object({
   tipo: z.string().min(1, {
     message: 'Selecione ou crie um tipo de despesa.',
   }),
+  status: z.enum(['due', 'due-soon', 'overdue', 'paid']),
   user_id: z.number().int(),
   userName: z.string().optional(),
 });
@@ -61,6 +62,7 @@ export function EditExpenseForm({ expense }: { expense: Expense }) {
       valor: String(expense.valor).replace('.', ','),
       vencimento: parseISO(expense.vencimento),
       tipo: expense.tipo,
+      status: expense.status,
       user_id: expense.user_id,
       userName: expense.userName || String(expense.user_id),
     },
@@ -70,6 +72,7 @@ export function EditExpenseForm({ expense }: { expense: Expense }) {
     setIsSubmitting(true);
     try {
       const expenseData = {
+        ...data,
         nome: data.nome.toUpperCase(),
         tipo: data.tipo.toUpperCase(),
         valor: parseFloat(data.valor.replace(',', '.')),
@@ -187,25 +190,50 @@ export function EditExpenseForm({ expense }: { expense: Expense }) {
                   )}
                 />
             </div>
-            <FormField
-              control={form.control}
-              name="tipo"
-              render={({ field }) => (
-                 <FormItem className="flex flex-col">
-                  <FormLabel>Tipo de Despesa</FormLabel>
-                    <Combobox
-                        options={comboboxOptions}
-                        value={field.value}
-                        onChange={handleTypeChange}
-                        placeholder="Selecione ou crie um tipo"
-                        searchPlaceholder="Pesquisar ou criar..."
-                        emptyMessage="Nenhum tipo encontrado. Crie um novo."
-                        isCreatable={true}
+             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <FormField
+                control={form.control}
+                name="tipo"
+                render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                    <FormLabel>Tipo de Despesa</FormLabel>
+                        <Combobox
+                            options={comboboxOptions}
+                            value={field.value}
+                            onChange={handleTypeChange}
+                            placeholder="Selecione ou crie um tipo"
+                            searchPlaceholder="Pesquisar ou criar..."
+                            emptyMessage="Nenhum tipo encontrado. Crie um novo."
+                            isCreatable={true}
+                        />
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+                 <FormField
+                    control={form.control}
+                    name="status"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Status</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Selecione o status" />
+                            </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                                <SelectItem value="paid">Paga</SelectItem>
+                                <SelectItem value="overdue">Vencida</SelectItem>
+                                <SelectItem value="due-soon">Vence em Breve</SelectItem>
+                                <SelectItem value="due">A Vencer</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <FormMessage />
+                        </FormItem>
+                    )}
                     />
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            </div>
             <FormField
               control={form.control}
               name="userName"
