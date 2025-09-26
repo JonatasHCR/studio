@@ -43,9 +43,7 @@ const expenseFormSchema = z.object({
   type: z.string().min(1, {
     message: 'Selecione ou crie um tipo de despesa.',
   }),
-  createdBy: z.string().min(2, {
-    message: 'O nome do criador deve ter pelo menos 2 caracteres.',
-  }),
+  createdBy: z.string(),
 });
 
 type ExpenseFormValues = z.infer<typeof expenseFormSchema>;
@@ -62,7 +60,7 @@ export function NewExpenseForm() {
     resolver: zodResolver(expenseFormSchema),
     defaultValues: {
       name: '',
-      createdBy: '', 
+      createdBy: user?.displayName || user?.email || '', 
       type: '',
       amount: '',
     },
@@ -95,13 +93,14 @@ export function NewExpenseForm() {
 
 
   async function onSubmit(data: ExpenseFormValues) {
-    if (!firestore) return;
+    if (!firestore || !user) return;
     setIsSubmitting(true);
     try {
       await addDoc(collection(firestore, 'expenses'), {
         ...data,
         amount: parseFloat(data.amount.replace(',', '.')),
         dueDate: Timestamp.fromDate(data.dueDate),
+        createdBy: user.displayName || user.email,
         status: 'due',
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),

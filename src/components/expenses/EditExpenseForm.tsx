@@ -43,9 +43,7 @@ const expenseFormSchema = z.object({
   type: z.string().min(1, {
     message: 'Selecione ou crie um tipo de despesa.',
   }),
-  createdBy: z.string().min(2, {
-    message: 'O nome do criador deve ter pelo menos 2 caracteres.',
-  }),
+  createdBy: z.string(),
 });
 
 type ExpenseFormValues = z.infer<typeof expenseFormSchema>;
