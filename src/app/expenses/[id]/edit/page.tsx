@@ -2,11 +2,11 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { EditExpenseForm } from '@/components/expenses/EditExpenseForm';
-import { useDoc } from '@/firebase/firestore/use-doc';
+import { useDoc } from '@/firebase';
 import { Pencil } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
-import { useAuth } from '@/firebase/auth/use-auth';
+import { useUser as useAuth } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { useFirebase } from '@/firebase';
 

@@ -3,7 +3,7 @@
 import { NewExpenseForm } from '@/components/expenses/NewExpenseForm';
 import { FilePlus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/firebase/auth/use-auth';
+import { useUser as useAuth } from '@/firebase';
 
 export default function NewExpensePage() {
   const { user, isLoading } = useAuth();

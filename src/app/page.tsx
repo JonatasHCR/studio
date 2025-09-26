@@ -4,7 +4,7 @@ import { ExpenseDashboard } from '@/components/dashboard/ExpenseDashboard';
 import { Button } from '@/components/ui/button';
 import { FileSpreadsheet, PlusCircle, LogOut } from 'lucide-react';
 import Link from 'next/link';
-import { useAuth } from '@/firebase/auth/use-auth';
+import { useUser as useAuth } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useFirebase } from '@/firebase';

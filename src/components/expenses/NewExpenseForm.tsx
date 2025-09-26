@@ -25,7 +25,7 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Combobox } from '../ui/combobox';
-import { useAuth } from '@/firebase/auth/use-auth';
+import { useUser as useAuth } from '@/firebase';
 import { useFirebase } from '@/firebase';
 import { addDoc, collection, getDocs, Timestamp, serverTimestamp } from 'firebase/firestore';
 
@@ -81,7 +81,7 @@ export function NewExpenseForm() {
             const querySnapshot = await getDocs(collection(firestore, "expenses"));
             const types = new Set(querySnapshot.docs.map(doc => doc.data().type as string));
             setExpenseTypes(Array.from(types));
-        } catch (error) {
+        } catch (error) => {
             console.error("Failed to fetch expense types:", error);
         }
     }
