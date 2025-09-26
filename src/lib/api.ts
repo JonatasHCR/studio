@@ -5,31 +5,14 @@ import { type Expense, type User, type ExpenseStatus } from './types';
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
 // --- Auth API ---
-export const signIn = async (credentials: Pick<User, 'email' | 'password'>): Promise<User | null> => {
+export const signIn = async (credentials: Pick<User, 'name' | 'password'>): Promise<User | null> => {
     await delay(1000);
-    const user = users.find(u => u.email === credentials.email && u.password === credentials.password);
+    const user = users.find(u => u.name === credentials.name && u.password === credentials.password);
     if (user) {
         return Promise.resolve(user);
     }
     return Promise.resolve(null);
 };
-
-export const signUp = async (userInfo: Pick<User, 'name' | 'email' | 'password'>): Promise<User> => {
-    await delay(1000);
-    if (users.find(u => u.email === userInfo.email)) {
-        throw new Error('Este e-mail já está em uso por outra conta.');
-    }
-    if(userInfo.password.length < 6) {
-        throw new Error('A senha é muito fraca. Tente uma senha mais forte.');
-    }
-    const newUser: User = {
-        id: `user-${Date.now()}`,
-        ...userInfo,
-    };
-    users.push(newUser);
-    return Promise.resolve(newUser);
-};
-
 
 // --- Expenses API ---
 export const getExpenses = async (): Promise<Expense[]> => {

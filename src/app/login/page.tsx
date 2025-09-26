@@ -9,11 +9,10 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader, LogIn } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { signIn } from '@/lib/api';
-import Link from 'next/link';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('adm@example.com');
-  const [password, setPassword] = useState('123456');
+  const [name, setName] = useState('');
+  const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
@@ -22,7 +21,7 @@ export default function LoginPage() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const user = await signIn({ email, password });
+      const user = await signIn({ name, password });
       if (user) {
         localStorage.setItem('userSession', JSON.stringify(user));
         router.push('/');
@@ -33,7 +32,7 @@ export default function LoginPage() {
       toast({
         variant: 'destructive',
         title: 'Falha no Login',
-        description: 'Usuário ou senha inválidos. Se você ainda não tem uma conta, por favor, registre-se.',
+        description: 'Usuário ou senha inválidos.',
       });
       setIsSubmitting(false);
     }
@@ -48,17 +47,17 @@ export default function LoginPage() {
               <LogIn className="h-8 w-8" />
             </div>
             <CardTitle className="font-headline text-2xl">Acessar Painel</CardTitle>
-            <CardDescription>Use seu e-mail e senha para entrar. (adm@example.com / 123456)</CardDescription>
+            <CardDescription>Use seu nome de usuário e senha para entrar.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
+              <Label htmlFor="name">Nome de Usuário</Label>
               <Input
-                id="email"
-                type="email"
-                placeholder="adm@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="name"
+                type="text"
+                placeholder="Seu nome de usuário"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 required
                 disabled={isSubmitting}
               />
@@ -80,9 +79,6 @@ export default function LoginPage() {
             <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting && <Loader className="mr-2 h-4 w-4 animate-spin" />}
               Entrar
-            </Button>
-            <Button variant="link" asChild>
-                <Link href="/signup">Não tem uma conta? Cadastre-se</Link>
             </Button>
           </CardFooter>
         </form>
