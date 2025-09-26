@@ -81,7 +81,7 @@ export function NewExpenseForm() {
             const querySnapshot = await getDocs(collection(firestore, "expenses"));
             const types = new Set(querySnapshot.docs.map(doc => doc.data().type as string));
             setExpenseTypes(Array.from(types));
-        } catch (error) => {
+        } catch (error) {
             console.error("Failed to fetch expense types:", error);
         }
     }
