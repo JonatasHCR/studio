@@ -223,7 +223,7 @@ export function EditExpenseForm({ expense }: { expense: Expense }) {
                 <FormItem>
                   <FormLabel>Criado por</FormLabel>
                   <FormControl>
-                    <Input placeholder="Seu nome" {...field} />
+                    <Input placeholder="Seu nome" {...field} disabled />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

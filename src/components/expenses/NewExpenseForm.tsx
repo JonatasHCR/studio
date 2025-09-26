@@ -26,6 +26,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Combobox } from '../ui/combobox';
 import { type Expense } from '@/lib/types';
+import { useAuth } from '@/context/AuthContext';
 
 
 const expenseFormSchema = z.object({
@@ -51,6 +52,7 @@ type ExpenseFormValues = z.infer<typeof expenseFormSchema>;
 export function NewExpenseForm() {
   const router = useRouter();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [expenseTypes, setExpenseTypes] = useState<string[]>([]);
   
@@ -58,11 +60,17 @@ export function NewExpenseForm() {
     resolver: zodResolver(expenseFormSchema),
     defaultValues: {
       name: '',
-      createdBy: 'Usuário Exemplo', // Default creator
+      createdBy: '', 
       type: '',
       amount: '',
     },
   });
+
+  useEffect(() => {
+    if (user) {
+      form.setValue('createdBy', user.username);
+    }
+  }, [user, form]);
 
   useEffect(() => {
     async function fetchExpenseTypes() {
@@ -224,7 +232,7 @@ export function NewExpenseForm() {
                 <FormItem>
                   <FormLabel>Criado por</FormLabel>
                   <FormControl>
-                    <Input placeholder="Seu nome" {...field} />
+                    <Input placeholder="Seu nome" {...field} disabled />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
