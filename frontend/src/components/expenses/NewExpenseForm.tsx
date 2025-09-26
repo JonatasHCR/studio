@@ -137,7 +137,8 @@ export function NewExpenseForm() {
                     <Input
                       placeholder="Ex: Conta de Luz"
                       {...field}
-                      onChange={(e) => field.onChange(e.target.value)}
+                      onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                      className="uppercase"
                     />
                   </FormControl>
                   <FormMessage />
@@ -270,5 +271,3 @@ export function NewExpenseForm() {
     </Card>
   );
 }
-
-    
