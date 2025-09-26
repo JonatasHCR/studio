@@ -6,7 +6,7 @@ class UserSchema(BaseModel):
 
     nome: str = Field(..., description="Nome do ativo")
     email: EmailStr = Field(..., description="Email do usuário")
-    senha: Optional[str] = Field(None, min_length=6, description="Senha do usuário")
+    senha: str = Field(None, min_length=6, description="Senha do usuário")
 
     model_config = ConfigDict(from_attributes=True)
 
