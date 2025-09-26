@@ -5,12 +5,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { type Expense, type ExpenseStatus } from '@/lib/types';
 import { StatusCard } from '@/components/dashboard/StatusCard';
 import { ExpenseCard } from '@/components/dashboard/ExpenseCard';
-import { Hourglass, AlertTriangle, CheckCircle2, DollarSign, Ban, Loader, FileText, ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { Hourglass, AlertTriangle, CheckCircle2, DollarSign, Ban, Loader, FileText, ChevronLeft, ChevronRight, Search, Filter } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const statusConfig: Record<ExpenseStatus, { title: string; icon: ReactNode }> = {
   due: { title: 'A Vencer', icon: <FileText className="h-8 w-8" /> },
@@ -20,6 +21,7 @@ const statusConfig: Record<ExpenseStatus, { title: string; icon: ReactNode }> = 
 };
 
 const statusOrder: ExpenseStatus[] = ['due', 'due-soon', 'overdue', 'paid'];
+const expenseTypes = ['Todos', 'Boleto', 'Nota'];
 
 function DashboardSkeleton() {
     return (
@@ -66,6 +68,7 @@ export function ExpenseDashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(6);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedType, setSelectedType] = useState('Todos');
 
   const fetchExpenses = useCallback(async (days: number) => {
     try {
@@ -95,13 +98,14 @@ export function ExpenseDashboard() {
   const filteredExpenses = useMemo(() => {
     return expenses.filter((e) => 
         e.status === selectedStatus &&
-        e.name.toLowerCase().includes(searchTerm.toLowerCase())
+        e.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        (selectedType === 'Todos' || e.type === selectedType)
     );
-  }, [expenses, selectedStatus, searchTerm]);
+  }, [expenses, selectedStatus, searchTerm, selectedType]);
   
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedStatus, itemsPerPage, searchTerm]);
+  }, [selectedStatus, itemsPerPage, searchTerm, selectedType]);
 
   const totalPages = Math.ceil(filteredExpenses.length / itemsPerPage) || 1;
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -141,19 +145,36 @@ export function ExpenseDashboard() {
           </div>
         )}
         <div className="flex flex-col space-y-4 p-6">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-                <h3 className="font-headline text-2xl font-semibold leading-none tracking-tight">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <h3 className="font-headline text-2xl font-semibold leading-none tracking-tight w-full sm:w-auto">
                     Despesas {statusConfig[selectedStatus].title}
                 </h3>
-                <div className="relative w-full max-w-sm">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        type="search"
-                        placeholder="Pesquisar despesas..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10"
-                    />
+                <div className="flex items-center gap-4 w-full sm:w-auto">
+                    <div className="relative w-full sm:w-64">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            type="search"
+                            placeholder="Pesquisar despesas..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="pl-10"
+                        />
+                    </div>
+                     <div className="relative w-full sm:w-48">
+                        <Select value={selectedType} onValueChange={setSelectedType}>
+                            <SelectTrigger>
+                                <div className="flex items-center gap-2">
+                                    <Filter className="h-4 w-4 text-muted-foreground" />
+                                    <SelectValue placeholder="Filtrar por tipo" />
+                                </div>
+                            </SelectTrigger>
+                            <SelectContent>
+                                {expenseTypes.map((type) => (
+                                    <SelectItem key={type} value={type}>{type}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
                 </div>
             </div>
              <div className="flex items-center justify-end gap-2 text-lg font-semibold text-muted-foreground">
@@ -166,7 +187,7 @@ export function ExpenseDashboard() {
         <div className="p-6 pt-0">
           <AnimatePresence mode="wait">
             <motion.div
-              key={selectedStatus + currentPage + itemsPerPage + searchTerm}
+              key={selectedStatus + currentPage + itemsPerPage + searchTerm + selectedType}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
@@ -195,7 +216,7 @@ export function ExpenseDashboard() {
                         Nenhuma despesa encontrada
                     </p>
                     <p className="max-w-xs text-sm text-muted-foreground">
-                        Não há despesas com o status "{statusConfig[selectedStatus].title}" no momento.
+                        Não há despesas com os filtros selecionados.
                     </p>
                 </div>
               )}
