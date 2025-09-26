@@ -24,7 +24,6 @@ import { Calendar } from '../ui/calendar';
 import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Combobox } from '../ui/combobox';
 import { type Expense } from '@/lib/types';
 import { updateExpense, getExpenses } from '@/lib/api';
 
@@ -77,10 +76,6 @@ export function EditExpenseForm({ expense }: { expense: Expense }) {
     fetchExpenseTypes();
   }, []);
   
-  const comboboxOptions = useMemo(() => {
-    return expenseTypes.map(type => ({ value: type, label: type }));
-  }, [expenseTypes]);
-
   async function onSubmit(data: ExpenseFormValues) {
     setIsSubmitting(true);
     try {
@@ -192,16 +187,26 @@ export function EditExpenseForm({ expense }: { expense: Expense }) {
               control={form.control}
               name="type"
               render={({ field }) => (
-                <FormItem className="flex flex-col">
+                 <FormItem className="flex flex-col">
                   <FormLabel>Tipo de Despesa</FormLabel>
-                    <Combobox
-                        options={comboboxOptions}
-                        value={field.value}
-                        onChange={field.onChange}
-                        placeholder="Selecione ou crie um tipo"
-                        noResultsText="Nenhum tipo encontrado."
-                        allowNewValues={true}
-                    />
+                  <div className="relative">
+                    <FormControl>
+                      <select
+                        {...field}
+                        className={cn(
+                          'flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none'
+                        )}
+                      >
+                        <option value="" disabled>Selecione um tipo</option>
+                        {expenseTypes.map(type => (
+                          <option key={type} value={type}>{type}</option>
+                        ))}
+                      </select>
+                    </FormControl>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                      <svg className="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                    </div>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
