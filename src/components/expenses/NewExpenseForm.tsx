@@ -92,6 +92,7 @@ export function NewExpenseForm() {
     try {
       await addExpense({
         ...data,
+        name: data.name.toUpperCase(),
         type: data.type.toUpperCase(),
         amount: parseFloat(data.amount.replace(',', '.')),
         dueDate: data.dueDate.toISOString(),

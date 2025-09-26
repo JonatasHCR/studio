@@ -82,6 +82,7 @@ export function EditExpenseForm({ expense }: { expense: Expense }) {
     try {
       await updateExpense(expense.id, {
         ...data,
+        name: data.name.toUpperCase(),
         type: data.type.toUpperCase(),
         amount: parseFloat(data.amount.replace(',', '.')),
         dueDate: data.dueDate.toISOString(),
