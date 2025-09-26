@@ -34,6 +34,7 @@ const expenseFormSchema = z.object({
     message: 'O nome deve ter pelo menos 2 caracteres.',
   }),
   valor: z.string().refine((val) => {
+    if (!val) return false;
     const formattedVal = val.replace(/\./g, '').replace(',', '.');
     return !isNaN(parseFloat(formattedVal));
   }, {
@@ -87,10 +88,8 @@ export function EditExpenseForm({ expense }: { expense: Expense }) {
   async function onSubmit(data: ExpenseFormValues) {
     setIsSubmitting(true);
     try {
-      const formattedValue = data.valor.replace(/\./g, '').replace(',', '.');
       const expenseData = {
         ...data,
-        valor: parseFloat(formattedValue),
         vencimento: data.vencimento.toISOString(),
         user_id: Number(data.user_id)
       };

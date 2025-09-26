@@ -38,6 +38,28 @@ async function fetchWrapper<T>(endpoint: string, options?: RequestInit): Promise
   }
 }
 
+// Helper to format currency values correctly
+const formatCurrencyValue = (value: string | number | undefined): number => {
+    if (value === undefined || value === null) return 0;
+    
+    let valueStr = String(value);
+
+    // Remove all dots (thousands separators)
+    valueStr = valueStr.replace(/\./g, '');
+
+    // Replace the last comma with a dot for decimal separation
+    if (valueStr.includes(',')) {
+      const parts = valueStr.split(',');
+      if (parts.length > 1) {
+        const lastPart = parts.pop();
+        valueStr = parts.join('') + '.' + lastPart;
+      }
+    }
+    
+    const num = parseFloat(valueStr);
+    return isNaN(num) ? 0 : num;
+}
+
 
 // --- Auth API ---
 export const signIn = async (credentials: Pick<User, 'nome' | 'senha'>): Promise<User | null> => {
@@ -93,25 +115,23 @@ export const getExpenseById = async (id: string): Promise<Expense | null> => {
 };
 
 export const addExpense = async (data: Omit<Expense, 'id' | 'userName' | 'dynamicStatus'>): Promise<Expense> => {
-  const formattedValue = String(data.valor).replace(/\./g, '').replace(',', '.');
   return fetchWrapper<Expense>('/despesas/', {
     method: 'POST',
     body: JSON.stringify({
         ...data,
         user_id: Number(data.user_id),
-        valor: Number(formattedValue),
+        valor: formatCurrencyValue(data.valor),
         vencimento: data.vencimento.split('T')[0], // Format to YYYY-MM-DD
     }),
   });
 };
 
 export const updateExpense = async (id: string, data: Partial<Omit<Expense, 'id' | 'dynamicStatus'>>): Promise<Expense> => {
-    const formattedValue = String(data.valor).replace(/\./g, '').replace(',', '.');
     const payload = {
         ...data,
         user_id: Number(data.user_id),
-        valor: Number(formattedValue),
-        vencimento: data.vencimento.split('T')[0], // Format to YYYY-MM-DD
+        valor: formatCurrencyValue(data.valor),
+        vencimento: data.vencimento ? data.vencimento.split('T')[0] : undefined, // Format to YYYY-MM-DD
     };
   
     return fetchWrapper<Expense>(`/despesas/${id}`, {
