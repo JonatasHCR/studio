@@ -1,7 +1,25 @@
+'use client';
+
 import { NewExpenseForm } from '@/components/expenses/NewExpenseForm';
 import { FilePlus } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function NewExpensePage() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
+
+  if (loading || !user) {
+    return null; // ou um componente de loading
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto max-w-2xl p-4 sm:p-6 lg:p-8">

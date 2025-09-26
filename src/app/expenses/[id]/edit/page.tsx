@@ -1,12 +1,13 @@
 'use client';
     
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { EditExpenseForm } from '@/components/expenses/EditExpenseForm';
 import { type Expense } from '@/lib/types';
 import { Pencil } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
+import { useAuth } from '@/context/AuthContext';
 
 function EditExpensePageSkeleton() {
     return (
@@ -60,9 +61,17 @@ export default function EditExpensePage() {
   const id = params.id as string;
   const [expense, setExpense] = useState<Expense | null>(null);
   const [loading, setLoading] = useState(true);
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
-    if (!id) return;
+    if (!authLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, authLoading, router]);
+
+  useEffect(() => {
+    if (!id || !user) return;
     
     async function fetchExpense() {
       try {
@@ -80,10 +89,14 @@ export default function EditExpensePage() {
       }
     }
     fetchExpense();
-  }, [id]);
-
-  if (loading) {
+  }, [id, user]);
+  
+  if (authLoading || loading) {
     return <EditExpensePageSkeleton />;
+  }
+  
+  if (!user) {
+    return null;
   }
 
   if (!expense) {
