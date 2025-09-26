@@ -92,8 +92,8 @@ export function NewExpenseForm() {
     try {
       await addExpense({
         ...data,
-        name: data.name.toUpperCase(),
-        type: data.type.toUpperCase(),
+        name: data.name,
+        type: data.type,
         amount: parseFloat(data.amount.replace(',', '.')),
         dueDate: data.dueDate.toISOString(),
         status: 'due',
@@ -143,6 +143,8 @@ export function NewExpenseForm() {
                     <Input
                       placeholder="Ex: Conta de Luz"
                       {...field}
+                      className="uppercase"
+                      onChange={(e) => field.onChange(e.target.value.toUpperCase())}
                     />
                   </FormControl>
                   <FormMessage />
