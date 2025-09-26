@@ -5,13 +5,18 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { type Expense, type ExpenseStatus } from '@/lib/types';
 import { StatusCard } from '@/components/dashboard/StatusCard';
 import { ExpenseCard } from '@/components/dashboard/ExpenseCard';
-import { Hourglass, AlertTriangle, CheckCircle2, Ban, Loader, FileText, ChevronLeft, ChevronRight, Search, Filter } from 'lucide-react';
+import { Hourglass, AlertTriangle, CheckCircle2, Ban, Loader, FileText, ChevronLeft, ChevronRight, Search, Filter, CalendarIcon } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format, isSameDay, parseISO } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 const statusConfig: Record<ExpenseStatus, { title: string; icon: ReactNode }> = {
   due: { title: 'A Vencer', icon: <FileText className="h-8 w-8" /> },
@@ -21,6 +26,8 @@ const statusConfig: Record<ExpenseStatus, { title: string; icon: ReactNode }> = 
 };
 
 const statusOrder: ExpenseStatus[] = ['due', 'due-soon', 'overdue', 'paid'];
+
+type FilterField = 'name' | 'type' | 'dueDate' | 'createdBy';
 
 function DashboardSkeleton() {
     return (
@@ -66,8 +73,8 @@ export function ExpenseDashboard() {
   const [dueSoonDays, setDueSoonDays] = useState(5);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(6);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedType, setSelectedType] = useState('Todos');
+  const [filterField, setFilterField] = useState<FilterField>('name');
+  const [filterValue, setFilterValue] = useState<string | Date | undefined>('');
 
   const fetchExpenses = useCallback(async (days: number) => {
     try {
@@ -94,6 +101,10 @@ export function ExpenseDashboard() {
     const types = new Set(expenses.map(e => e.type));
     return ['Todos', ...Array.from(types)];
   }, [expenses]);
+  
+  useEffect(() => {
+    setFilterValue('');
+  }, [filterField]);
 
   const statusCounts = useMemo(() => {
     const counts: Record<ExpenseStatus, number> = { due: 0, 'due-soon': 0, overdue: 0, paid: 0 };
@@ -104,16 +115,29 @@ export function ExpenseDashboard() {
   }, [expenses]);
 
   const filteredExpenses = useMemo(() => {
-    return expenses.filter((e) => 
-        e.status === selectedStatus &&
-        e.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        (selectedType === 'Todos' || e.type === selectedType)
-    );
-  }, [expenses, selectedStatus, searchTerm, selectedType]);
+    return expenses.filter((e) => {
+        if (e.status !== selectedStatus) return false;
+        
+        if (!filterValue) return true;
+
+        switch (filterField) {
+            case 'name':
+                return e.name.toLowerCase().includes((filterValue as string).toLowerCase());
+            case 'createdBy':
+                return e.createdBy.toLowerCase().includes((filterValue as string).toLowerCase());
+            case 'type':
+                 return filterValue === 'Todos' || e.type === filterValue;
+            case 'dueDate':
+                return isSameDay(parseISO(e.dueDate), filterValue as Date);
+            default:
+                return true;
+        }
+    });
+  }, [expenses, selectedStatus, filterField, filterValue]);
   
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedStatus, itemsPerPage, searchTerm, selectedType]);
+  }, [selectedStatus, itemsPerPage, filterField, filterValue]);
 
   const totalPages = Math.ceil(filteredExpenses.length / itemsPerPage) || 1;
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -123,6 +147,64 @@ export function ExpenseDashboard() {
   const totalAmount = useMemo(() => {
     return currentExpenses.reduce((sum, expense) => sum + expense.amount, 0);
   }, [currentExpenses]);
+  
+  const renderFilterInput = () => {
+    switch (filterField) {
+        case 'dueDate':
+            return (
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <Button
+                            variant={'outline'}
+                            className={cn(
+                                'w-full sm:w-64 justify-start text-left font-normal',
+                                !filterValue && 'text-muted-foreground'
+                            )}
+                        >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {filterValue ? format(filterValue as Date, 'PPP', { locale: ptBR }) : <span>Escolha uma data</span>}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                        <Calendar
+                            mode="single"
+                            selected={filterValue as Date}
+                            onSelect={(date) => setFilterValue(date)}
+                            initialFocus
+                        />
+                    </PopoverContent>
+                </Popover>
+            );
+        case 'type':
+            return (
+                 <Select value={filterValue as string || 'Todos'} onValueChange={(value) => setFilterValue(value)}>
+                    <SelectTrigger className="w-full sm:w-64">
+                        <SelectValue placeholder="Filtrar por tipo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {expenseTypes.map((type) => (
+                            <SelectItem key={type} value={type}>{type}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            );
+        case 'name':
+        case 'createdBy':
+        default:
+            return (
+                <div className="relative w-full sm:w-64">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        type="search"
+                        placeholder="Pesquisar..."
+                        value={filterValue as string || ''}
+                        onChange={(e) => setFilterValue(e.target.value)}
+                        className="pl-10"
+                    />
+                </div>
+            );
+    }
+  }
 
   if (loading && expenses.length === 0) {
     return <DashboardSkeleton />;
@@ -157,32 +239,22 @@ export function ExpenseDashboard() {
                 <h3 className="font-headline text-2xl font-semibold leading-none tracking-tight w-full sm:w-auto">
                     Despesas {statusConfig[selectedStatus].title}
                 </h3>
-                <div className="flex items-center gap-4 w-full sm:w-auto">
-                    <div className="relative w-full sm:w-64">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            type="search"
-                            placeholder="Pesquisar despesas..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-10"
-                        />
-                    </div>
-                     <div className="relative w-full sm:w-48">
-                        <Select value={selectedType} onValueChange={setSelectedType}>
-                            <SelectTrigger>
-                                <div className="flex items-center gap-2">
-                                    <Filter className="h-4 w-4 text-muted-foreground" />
-                                    <SelectValue placeholder="Filtrar por tipo" />
-                                </div>
+                <div className="flex items-center gap-4 w-full sm:w-auto flex-wrap">
+                    <div className="flex items-center gap-2">
+                        <Filter className="h-4 w-4 text-muted-foreground" />
+                        <Select value={filterField} onValueChange={(value) => setFilterField(value as FilterField)}>
+                            <SelectTrigger className="w-full sm:w-48">
+                                <SelectValue placeholder="Filtrar por..." />
                             </SelectTrigger>
                             <SelectContent>
-                                {expenseTypes.map((type) => (
-                                    <SelectItem key={type} value={type}>{type}</SelectItem>
-                                ))}
+                                <SelectItem value="name">Nome da Despesa</SelectItem>
+                                <SelectItem value="type">Tipo</SelectItem>
+                                <SelectItem value="dueDate">Data de Vencimento</SelectItem>
+                                <SelectItem value="createdBy">Criado Por</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
+                    {renderFilterInput()}
                 </div>
             </div>
              <div className="flex items-center justify-end gap-2 text-lg font-semibold text-muted-foreground">
@@ -194,7 +266,7 @@ export function ExpenseDashboard() {
         <div className="p-6 pt-0">
           <AnimatePresence mode="wait">
             <motion.div
-              key={selectedStatus + currentPage + itemsPerPage + searchTerm + selectedType}
+              key={selectedStatus + currentPage + itemsPerPage + filterField + String(filterValue)}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
