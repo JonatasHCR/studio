@@ -30,13 +30,9 @@ serving:
         value: producao
 rewrites:
   - source: /api/**
-    run:
-      serviceId: backend
-      region: us-central1
+    serviceId: backend
   - source: /**
-    run:
-      serviceId: frontend
-      region: us-central1
+    serviceId: frontend
 requiredSecrets:
   - secret: DATABASE_URL
     resource: projects/studioproj-75955/secrets/DATABASE_URL
