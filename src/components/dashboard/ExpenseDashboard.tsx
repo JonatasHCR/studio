@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { type Expense, type ExpenseStatus } from '@/lib/types';
 import { StatusCard } from '@/components/dashboard/StatusCard';
 import { ExpenseCard } from '@/components/dashboard/ExpenseCard';
-import { Hourglass, AlertTriangle, CheckCircle2, DollarSign, Ban, Loader, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Hourglass, AlertTriangle, CheckCircle2, DollarSign, Ban, Loader, FileText, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -65,6 +65,7 @@ export function ExpenseDashboard() {
   const [dueSoonDays, setDueSoonDays] = useState(5);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(6);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const fetchExpenses = useCallback(async (days: number) => {
     try {
@@ -92,12 +93,15 @@ export function ExpenseDashboard() {
   }, [expenses]);
 
   const filteredExpenses = useMemo(() => {
-    return expenses.filter((e) => e.status === selectedStatus);
-  }, [expenses, selectedStatus]);
+    return expenses.filter((e) => 
+        e.status === selectedStatus &&
+        e.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [expenses, selectedStatus, searchTerm]);
   
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedStatus, itemsPerPage]);
+  }, [selectedStatus, itemsPerPage, searchTerm]);
 
   const totalPages = Math.ceil(filteredExpenses.length / itemsPerPage) || 1;
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -136,23 +140,33 @@ export function ExpenseDashboard() {
             <Loader className="h-8 w-8 animate-spin text-primary" />
           </div>
         )}
-        <div className="flex flex-col space-y-1.5 p-6">
-            <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-col space-y-4 p-6">
+            <div className="flex flex-wrap items-center justify-between gap-4">
                 <h3 className="font-headline text-2xl font-semibold leading-none tracking-tight">
                     Despesas {statusConfig[selectedStatus].title}
                 </h3>
-                <div className="flex items-center gap-2 text-lg font-semibold text-muted-foreground">
-                    <DollarSign className="h-5 w-5"/>
-                    <span>
-                        {totalAmount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                    </span>
+                <div className="relative w-full max-w-sm">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        type="search"
+                        placeholder="Pesquisar despesas..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10"
+                    />
                 </div>
+            </div>
+             <div className="flex items-center justify-end gap-2 text-lg font-semibold text-muted-foreground">
+                <DollarSign className="h-5 w-5"/>
+                <span>
+                    Total da página: {totalAmount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                </span>
             </div>
         </div>
         <div className="p-6 pt-0">
           <AnimatePresence mode="wait">
             <motion.div
-              key={selectedStatus + currentPage + itemsPerPage}
+              key={selectedStatus + currentPage + itemsPerPage + searchTerm}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
