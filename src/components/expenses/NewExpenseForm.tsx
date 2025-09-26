@@ -60,6 +60,7 @@ export function NewExpenseForm() {
       nome: '',
       tipo: '',
       valor: '',
+      user_id: 0,
     },
   });
 
@@ -218,7 +219,7 @@ export function NewExpenseForm() {
                 <FormItem>
                   <FormLabel>ID do Usuário</FormLabel>
                   <FormControl>
-                    <Input placeholder="Seu ID" {...field} disabled />
+                    <Input placeholder="Seu ID" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || 0)} disabled />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

@@ -57,7 +57,7 @@ export function EditExpenseForm({ expense }: { expense: Expense }) {
     resolver: zodResolver(expenseFormSchema),
     defaultValues: {
       nome: expense.nome,
-      valor: expense.valor.toString().replace('.', ','),
+      valor: String(expense.valor).replace('.', ','),
       vencimento: parseISO(expense.vencimento),
       tipo: expense.tipo,
       user_id: expense.user_id,
@@ -209,7 +209,7 @@ export function EditExpenseForm({ expense }: { expense: Expense }) {
                 <FormItem>
                   <FormLabel>ID do Usuário</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="ID do usuário" {...field} disabled />
+                    <Input type="number" placeholder="ID do usuário" {...field}  onChange={e => field.onChange(parseInt(e.target.value, 10) || 0)} disabled />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
