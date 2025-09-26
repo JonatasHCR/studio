@@ -65,7 +65,7 @@ export function ExpenseDashboard() {
     setIsLoading(true);
     try {
         const data = await getExpenses();
-        setRawExpenses(data);
+        setRawExpenses(data || []);
     } catch (error) {
         console.error("Failed to fetch expenses:", error);
         setRawExpenses([]);
