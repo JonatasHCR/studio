@@ -2,9 +2,9 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { type Expense, type ExpenseStatus } from '@/lib/types';
-import { CalendarDays, DollarSign, MoreVertical, Pencil, Check, User, X, Loader } from 'lucide-react';
+import { CalendarDays, MoreVertical, Pencil, Check, User, X, Loader, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -42,7 +42,9 @@ export function ExpenseCard({ expense, onStatusChange }: ExpenseCardProps) {
   const styles = statusStyles[expense.status];
   const { toast } = useToast();
   const [isUpdating, setIsUpdating] = useState(false);
-  const [isAlertDialogOpen, setIsAlertDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isStatusAlertOpen, setIsStatusAlertOpen] = useState(false);
+  const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
 
   const handleStatusChange = async (newStatus: ExpenseStatus) => {
     setIsUpdating(true);
@@ -71,9 +73,39 @@ export function ExpenseCard({ expense, onStatusChange }: ExpenseCardProps) {
       });
     } finally {
       setIsUpdating(false);
-      setIsAlertDialogOpen(false);
+      setIsStatusAlertOpen(false);
     }
   };
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+        const response = await fetch(`/api/expenses/${expense.id}`, {
+            method: 'DELETE',
+        });
+
+        if (!response.ok) {
+            throw new Error('Falha ao excluir a despesa');
+        }
+
+        toast({
+            title: 'Sucesso!',
+            description: 'A despesa foi excluída.',
+        });
+
+        onStatusChange(); // Re-fetch expenses
+    } catch (error) {
+        toast({
+            variant: 'destructive',
+            title: 'Uh oh! Algo deu errado.',
+            description: (error as Error).message || 'Não foi possível excluir a despesa.',
+        });
+    } finally {
+        setIsDeleting(false);
+        setIsDeleteAlertOpen(false);
+    }
+  };
+
 
   return (
     <Card className={cn("flex flex-col justify-between h-full transition-shadow hover:shadow-md border-l-4", styles.border)}>
@@ -102,13 +134,37 @@ export function ExpenseCard({ expense, onStatusChange }: ExpenseCardProps) {
                             Editar
                           </Link>
                         </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
+                            <AlertDialogTrigger asChild>
+                                <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive focus:text-destructive">
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    Excluir
+                                </DropdownMenuItem>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    {`Tem certeza que deseja excluir permanentemente a despesa "${expense.name}"? Esta ação não pode ser desfeita.`}
+                                </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleDelete} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">
+                                    {isDeleting && <Loader className="mr-2 h-4 w-4 animate-spin" />}
+                                    Excluir
+                                </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>
         </div>
       </CardHeader>
       <CardContent>
-        <AlertDialog open={isAlertDialogOpen} onOpenChange={setIsAlertDialogOpen}>
+        <AlertDialog open={isStatusAlertOpen} onOpenChange={setIsStatusAlertOpen}>
             <div className="flex flex-col gap-4">
                 <div className="flex flex-col gap-2">
                     <div className="flex items-center space-x-2 text-sm text-muted-foreground">

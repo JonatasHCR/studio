@@ -60,3 +60,20 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
         return NextResponse.json({ message: 'Erro ao atualizar despesa', error }, { status: 500 });
     }
 }
+
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+    try {
+        const { id } = params;
+        const expenseIndex = expenses.findIndex((e) => e.id === id);
+
+        if (expenseIndex === -1) {
+            return NextResponse.json({ message: 'Despesa não encontrada' }, { status: 404 });
+        }
+
+        expenses.splice(expenseIndex, 1);
+
+        return NextResponse.json({ message: 'Despesa excluída com sucesso' }, { status: 200 });
+    } catch (error) {
+        return NextResponse.json({ message: 'Erro ao excluir despesa', error }, { status: 500 });
+    }
+}
