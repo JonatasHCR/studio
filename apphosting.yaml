@@ -1,7 +1,43 @@
 # Settings to manage and configure a Firebase App Hosting backend.
 # https://firebase.google.com/docs/app-hosting/configure
-
 runConfig:
   # Increase this value if you'd like to automatically spin up
   # more instances in response to increased traffic.
   maxInstances: 1
+# Serve the Next.js app from the 'frontend' directory
+# and the Python API from the 'backend' directory.
+backend:
+  run: cd backend && gunicorn --workers 1 --threads 8 --timeout 0 main:app
+  directory: backend
+  instanceSize: 256M
+serving:
+  - id: frontend
+    source:
+      directory: frontend
+    maxInstances: 1
+    minInstances: 0
+    instanceSize: 256M
+  - id: backend
+    source:
+      directory: backend
+    maxInstances: 1
+    minInstances: 0
+    instanceSize: 256M
+    env:
+      - variable: DATABASE_URL
+        secret: DATABASE_URL
+      - variable: ENV
+        value: producao
+rewrites:
+  - source: /api/**
+    run:
+      serviceId: backend
+      region: us-central1
+  - source: /**
+    run:
+      serviceId: frontend
+      region: us-central1
+requiredSecrets:
+  - secret: DATABASE_URL
+    resource: projects/studioproj-75955/secrets/DATABASE_URL
+    version: '1'
